@@ -10,29 +10,16 @@ import java.net.Socket;
 import org.l3eta.turntable.tt.Commands;
 import org.l3eta.turntable.util.Line;
 
-
 public class Client {
 	private Commands handler;
 	private BufferedReader in = null;
 	private BufferedWriter out = null;
 	
-	public Client(String room, int sleep) {
-		this(room, sleep, "127.0.0.1", 23);
-	}
-	
-	public class Derp extends Thread {
-		public void run() {
-			while (true) {
-				
-			}
-		}
-	}
-	
 	public Client(int sleep) {
-		this("", sleep, "127.0.0.1", 23);
+		this(sleep, "127.0.0.1", 23);
 	}
 	
-	public Client(String room, int sleep, String addr, int port) {
+	public Client(int sleep, String addr, int port) {
 		try {
 			Thread.sleep(sleep);
 			Socket sock = new Socket(addr, port);
@@ -40,7 +27,7 @@ public class Client {
 					new InputStreamReader(sock.getInputStream()));
 			out = new BufferedWriter(new OutputStreamWriter(
 					sock.getOutputStream()));			
-			new Sender(this, room);
+			new Sender(this);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -91,6 +78,4 @@ public class Client {
 	public void ping() {
 		this.write("ping: Future");
 	}
-
-
 }

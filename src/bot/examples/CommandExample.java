@@ -7,8 +7,11 @@ import org.l3eta.turntable.util.net.Sender;
 
 public class CommandExample implements Bot {
 	private Room room = new Room("Room name");
-
+	
+	private String[] info = { "auth", "userid", "roomid" };
+	
 	public void init() {
+		Sender.start(info);
 		// TODO Auto-generated method stub
 	}
 
@@ -83,7 +86,7 @@ public class CommandExample implements Bot {
 		if(text.startsWith("!")) {
 			text = text.substring(1);
 			String[] args = text.split(" ");
-			Line cmd = new Line(args[0]);			
+			Line cmd = new Line(args[0]);
 			if(cmd.equals("hello")) {
 				Sender.Talk.speak(String.format("Hi %s, How are you?", name));
 			}

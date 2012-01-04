@@ -7,9 +7,8 @@ public class Sender {
 	private static ArrayList<String> Queue = new ArrayList<String>();
 	private static Client client;
 
-	public Sender(Client client, String room) {
+	public Sender(Client client) {
 		Sender.client = client;
-		Sender.addQueue("starter:" + room);
 	}
 	
 	public static void debug() {
@@ -131,5 +130,9 @@ public class Sender {
 
 	public Client getClient() {
 		return client;
+	}
+
+	public static void start(String[] info) {
+		Sender.addQueue(String.format("start:%s:%s:%s", info[0], info[1], info[2]));
 	}
 }
