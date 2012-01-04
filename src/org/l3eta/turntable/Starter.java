@@ -23,7 +23,7 @@ public class Starter {
 	public void run(String botName) {
 		try {
 			Runtime.getRuntime()
-					.exec("cmd.exe /C start ./js/" + botName + ".bat");
+					.exec("cmd.exe /C start js\\" + botName + ".bat");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

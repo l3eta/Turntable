@@ -18,8 +18,8 @@ net.createServer(function(socket) {
 	});
 }).listen(23, '127.0.0.1');
 
-function start(id) {
-	var info = new String(id).split(":");
+function start(data) {
+	var info = new String(data).split(":");
 	var Bot = require('./ttapi').Bot;
 	bot = new Bot(info[0], info[1], info[2]);
 	bot.on('roomChanged', function(data) {
