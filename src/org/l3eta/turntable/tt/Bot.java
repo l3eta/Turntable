@@ -3,6 +3,7 @@ package org.l3eta.turntable.tt;
 import org.l3eta.turntable.util.Line;
 
 public interface Bot {
+	
 	public abstract void init();
 
 	public abstract Room getRoom();

@@ -6,15 +6,20 @@ import java.util.HashMap;
 import org.l3eta.turntable.tt.User.Rank;
 import org.l3eta.turntable.util.net.Sender;
 
-
 public class Room {
 	private ArrayList<User> userlist = new ArrayList<User>();
 	private HashMap<String, Rank> modlist = new HashMap<String, Rank>();
 	private HashMap<String, String> banlist = new HashMap<String, String>();
-	private ArrayList<User> djs = new ArrayList<User>();
+	//private ArrayList<User> djs = new ArrayList<User>(); //TODO LATER
+	
 	
 	public Users Users = new Users();
 	private Settings settings = new Settings();
+	private String name = "Default Room Name";
+	
+	public Room(String name) {
+		this.name = name;
+	}
 	
 	public void addMod(String userid, Rank rank) {
 		if(modlist.containsKey(userid)) {
@@ -26,8 +31,8 @@ public class Room {
 
 	public String getGreeting(User user) {
 		return String
-				.format("Welcome to The Future of Dubstep, %s. Please enjoy your stay!",
-						user.getName());
+				.format("Welcome to %s, %s. Please enjoy your stay!",
+						this.name, user.getName());
 	}
 	
 	public Settings getSettings() {
