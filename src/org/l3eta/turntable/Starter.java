@@ -15,8 +15,8 @@ public class Starter {
 			run("Bot");
 			Bot bot = (Bot) bot.Future.class.newInstance();
 			new Client(1500).start(new Commands(bot));
-		} catch (Exception e1) {
-			e1.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
 
