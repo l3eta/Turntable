@@ -97,4 +97,10 @@ public class CommandExample implements Bot {
 	public void onOther(Line line) {
 		// TODO Auto-generated method stub
 	}
+
+	@Override
+	public void reload() {
+		// TODO Auto-generated method stub
+		
+	}
 }

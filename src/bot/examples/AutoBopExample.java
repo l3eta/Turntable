@@ -6,10 +6,10 @@ import org.l3eta.turntable.util.Line;
 import org.l3eta.turntable.util.net.Sender;
 
 public class AutoBopExample implements Bot {
-private Room room = new Room("Room name");
-	
+	private Room room = new Room("Room name");
+
 	private String[] info = { "auth", "userid", "roomid" };
-	
+
 	public void init() {
 		Sender.start(info);
 	}
@@ -81,19 +81,17 @@ private Room room = new Room("Room name");
 
 	@Override
 	public void onSpeak(Line line) {
-		String name = line.getString("name"), text = line.getString("text");
-		if(text.startsWith("!")) {
-			text = text.substring(1);
-			String[] args = text.split(" ");
-			Line cmd = new Line(args[0]);
-			if(cmd.equals("hello")) {
-				Sender.Talk.speak(String.format("Hi %s, How are you?", name));
-			}
-		}
+		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void onOther(Line line) {
 		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void reload() {
+		// TODO Auto-generated method stub
+
 	}
 }
