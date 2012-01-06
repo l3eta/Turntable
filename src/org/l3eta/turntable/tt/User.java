@@ -118,9 +118,9 @@ public class User implements Serializable {
 	public String toString() {
 		String stats = this.getStats().toString();
 		return String
-				.format("{User:{ name: %s, userid: %s, laptop: %s, points: %d, fans: %d, avatar: %d, rank: %d { %s }}}",
+				.format("{User:{ name: %s, userid: %s, laptop: %s, points: %d, fans: %d, avatar: %d, rank: %s { %s }}}",
 						name, userid, laptop, points, fans, avatar,
-						rank.toInteger(), stats);
+						rank.toString(), stats);
 	}
 
 	public class Stats implements Serializable {
@@ -224,60 +224,26 @@ public class User implements Serializable {
 			return this.points;
 		}
 	}
+	
+	public static void main(String[] args) {
+		System.out.println(Rank.Admin.compareTo(Rank.Mod));
+	}
 
 	public enum Rank {
-		Owner, Admin, Mod, Friend, Producer, User;
-
-		public int toInteger() {
-			if (this == Owner)
-				return 5;
-			else if (this == Admin)
-				return 4;
-			else if (this == Mod)
-				return 3;
-			else if (this == Friend)
-				return 2;
-			else if (this == Producer)
-				return 1;
-			return 0;
-		}
-
-		public boolean isOwner() {
-			return this.toInteger() >= Owner.toInteger();
-		}
-
-		public boolean isAdmin() {
-			return this.toInteger() >= Admin.toInteger();
-		}
+		User, Producer, Friend, Mod, Admin, Owner;
 
 		public boolean compare(Rank rank) {
 			if (this == Owner)
-				return rank.isOwner();
+				return this.compareTo(Owner) <= 0;
 			else if (this == Admin)
-				return rank.isAdmin();
+				return this.compareTo(Admin) <= 0;
 			else if (this == Mod)
-				return rank.isMod();
+				return this.compareTo(Mod) <= 0;
 			else if (this == Friend)
-				return rank.isFriend();
+				return this.compareTo(Friend) <= 0;
 			else if (this == Producer)
-				return rank.isProducer();
+				return this.compareTo(Producer) <= 0;
 			return false;
-		}
-
-		public boolean isMod() {
-			return this.toInteger() >= Mod.toInteger();
-		}
-
-		public boolean isFriend() {
-			return this.toInteger() >= Friend.toInteger();
-		}
-
-		public boolean isProducer() {
-			return this.toInteger() >= Producer.toInteger();
-		}
-
-		public boolean isUser() {
-			return this.toInteger() >= User.toInteger();
 		}
 
 		public static Rank parseLine(Line line) {
