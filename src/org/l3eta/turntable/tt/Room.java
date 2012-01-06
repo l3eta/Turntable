@@ -12,9 +12,8 @@ public class Room {
 	private HashMap<String, String> banlist = new HashMap<String, String>();
 	//private ArrayList<User> djs = new ArrayList<User>(); //TODO LATER
 	
-	
+	private Song currentSong;
 	public Users Users = new Users();
-	private Settings settings = new Settings();
 	private String name = "Default Room Name";
 	
 	public Room(String name) {
@@ -23,10 +22,16 @@ public class Room {
 	
 	public void addMod(String userid, Rank rank) {
 		if(modlist.containsKey(userid)) {
-			System.out.println("This userid is already in the mod list.");
+			System.out.println("[Room] This userid is already in the mod list.");
 			return;
 		}
 		modlist.put(userid, rank);
+	}
+	
+	public void addMods(Object[][] list) {
+		for(Object[] o : list) {
+			this.addMod(String.valueOf(o[0]), Rank.parseObject(o[1]));
+		}
 	}
 
 	public String getGreeting(User user) {
@@ -34,9 +39,13 @@ public class Room {
 				.format("Welcome to %s, %s. Please enjoy your stay!",
 						this.name, user.getName());
 	}
-	
-	public Settings getSettings() {
-		return this.settings;
+
+	public Song getCurrentSong() {
+		return currentSong;
+	}
+
+	public void setSong(Song currentSong) {
+		this.currentSong = currentSong;
 	}
 
 	public class Users {
@@ -49,8 +58,7 @@ public class Room {
 		}
 
 		public void removeUser(int userIndex) {
-			User user = userlist.get(userIndex);
-			user.save();
+			userlist.get(userIndex).save();
 			userlist.remove(userIndex);
 		}
 
@@ -101,35 +109,6 @@ public class Room {
 				return;
 			banlist.put(user.getUserID(), reason);
 			Sender.Mod.boot(user.getUserID(), reason);
-		}
-	}
-
-	public class Settings {
-		public String botName = "Mister Dubstep";
-		private boolean AutoVote = true;
-		private boolean Greeting = true;
-		// private boolean Database = true;
-		private boolean AutoSkip = true;
-		private Song currentSong;
-
-		public boolean getAutoVote() {
-			return this.AutoVote;
-		}
-
-		public boolean getAutoSkip() {
-			return this.AutoSkip;
-		}
-
-		public boolean getGreeting() {
-			return this.Greeting;
-		}
-
-		public Song getSong() {
-			return currentSong;
-		}
-
-		public void setSongData(Song song) {
-			currentSong = song;
 		}
 	}
 }

@@ -34,6 +34,11 @@ public class Sender {
 	}
 
 	public static class Other {
+		/**
+		 * Tells the bot you vote
+		 * 
+		 * @param up 	Weather to vote up or down.
+		 */
 		public static void vote(boolean up) {
 			Other.doAction("vote", up ? "up" : "down");
 		}
@@ -41,25 +46,34 @@ public class Sender {
 		private static void doAction(String command, String data) {
 			addQueue(String.format("%s:%s", command, data));
 		}
-
-		public static void ping() {
-			Other.doAction("ping", "");			
-		}
 	}
 
 	public static class Dj {
+		/**
+		 * Tells the bot you want him to be a DJ.
+		 */
 		public static void dj() {
 			Dj.doAction("dj");
 		}
-
+		
+		/**
+		 * Tells the bot you want him to skip his song.
+		 */
 		public static void skipSong() {
 			Dj.doAction("skip");
 		}
 
+		/** 
+		 * Tells the bot you want him to remove himself from DJ.
+		 */
 		public static void remDJ() {
 			Dj.doAction("rdj");
 		}
-
+		
+		/**
+		 * Tells the bot you want to boot someone from DJ.
+		 * @param data	UserID to boot from DJing.
+		 */
 		public static void removeDJ(String data) {
 			Dj.doAction("rdj", data);
 		}
@@ -74,14 +88,27 @@ public class Sender {
 	}
 
 	public static class Mod {
+		/**
+		 * Tells the bot you want to boot a user.
+		 * @param userid	UserID of the user you want to boot.
+		 * @param reason	Reason of why your booting the user.
+		 */
 		public static void boot(String userid, String reason) {
 			Mod.doAction("boot", String.format("%s-%s", userid, reason));
 		}
 
+		/**
+		 * Tells the bot you want to add a room mod.
+		 * @param userid	UserID of User to make room mod.
+		 */
 		public static void addMod(String userid) {
 			Mod.doAction("add", userid);
 		}
 
+		/**
+		 * Tells the bot you want to remove a room mod.
+		 * @param userid	UserID of User to make room mod.
+		 */
 		public static void remMod(String userid) {
 			Mod.doAction("rem", userid);
 		}

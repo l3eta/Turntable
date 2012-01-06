@@ -12,7 +12,6 @@ private Room room = new Room("Room name");
 	
 	public void init() {
 		Sender.start(info);
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -47,7 +46,7 @@ private Room room = new Room("Room name");
 
 	@Override
 	public void onBooted(Line line) {
-		// TODO Auto-generated method stub
+		Sender.Other.vote(true);
 	}
 
 	@Override

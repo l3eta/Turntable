@@ -242,20 +242,6 @@ public class User implements Serializable {
 			return 0;
 		}
 
-		public static Rank parseInt(int rank) {
-			if (rank == Owner.toInteger())
-				return Owner;
-			else if (rank == Admin.toInteger())
-				return Admin;
-			else if (rank == Mod.toInteger())
-				return Mod;
-			else if (rank == Friend.toInteger())
-				return Friend;
-			else if (rank == Producer.toInteger())
-				return Producer;
-			return User;
-		}
-
 		public boolean isOwner() {
 			return this.toInteger() >= Owner.toInteger();
 		}
@@ -308,6 +294,10 @@ public class User implements Serializable {
 			} else {
 				return User;
 			}
+		}
+
+		public static Rank parseObject(Object object) {
+			return parseLine(new Line(String.valueOf(object)));
 		}
 	}
 

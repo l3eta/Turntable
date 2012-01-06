@@ -1,5 +1,7 @@
 package org.l3eta.turntable.tt;
 
+import java.util.ArrayList;
+
 import org.l3eta.turntable.util.Line;
 import org.l3eta.turntable.util.io.Logger;
 
@@ -8,9 +10,8 @@ public class Song {
 	private String artist, song, fileid;
 	private int[] votes = { 0, 0 };
 	private int snags = 0, length = 0;
-
+	private ArrayList<String> snaggers = new ArrayList<String>();
 	public Song(User dj, Line line) {
-		System.out.println(line);
 		this.dj = dj;
 		this.artist = line.getString("artist");
 		this.song = line.getString("song");
@@ -19,6 +20,7 @@ public class Song {
 	}
 	
 	private void resetData() {
+		this.snaggers.clear();
 		this.snags = 0;
 		this.votes = new int[] { 0, 0 };
 	}
@@ -27,8 +29,13 @@ public class Song {
 		votes = new int[] { up, down };
 	}
 
-	public void addSnag() {
+	public void addSnag(String uid) {
+		snaggers.add(uid);
 		snags++;
+	}
+	
+	public ArrayList<String> getSnaggers() {
+		return this.snaggers;
 	}
 
 	public String getSong() {
