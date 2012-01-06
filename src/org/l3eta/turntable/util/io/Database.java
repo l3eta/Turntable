@@ -1,16 +1,33 @@
 package org.l3eta.turntable.util.io;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+
+import org.l3eta.turntable.util.Line;
+
 
 public class Database {
 	private File db;
-	private ArrayList<String> Lines = new ArrayList<String>();
+	private ArrayList<String> lines = new ArrayList<String>();
 	private boolean hasRead = false;
 
 	public Database(String name) {
 		db = new File("data/db/", name + ".db");
 		this.read();
+	}	
+	
+	public String findString(String key, String value, String find) {
+		for(int i = 0; i < lines.size(); i++) {
+			Line line = new Line(lines.get(i));
+			if(line.getString(key).equals(value)) {
+				return line.getString(find);
+			}
+		}
+		return null;
 	}
 
 	public void read() {
@@ -22,7 +39,7 @@ public class Database {
 				BufferedReader in = new BufferedReader(f);
 				String line;
 				while ((line = in.readLine()) != null) {
-					Lines.add(line);
+					lines.add(line);
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -41,8 +58,8 @@ public class Database {
 
 	public void clean() {
 		ArrayList<String> Temp = new ArrayList<String>();
-		for(int i = 0; i < Lines.size(); i++) {
-			String line = Lines.get(i);
+		for(int i = 0; i < lines.size(); i++) {
+			String line = lines.get(i);
 			if(!Temp.contains(line)) {
 				Temp.add(line);
 			}
@@ -64,7 +81,7 @@ public class Database {
 	}
 	
 	public void append(String o) {
-		Lines.add(o);
+		lines.add(o);
 		clean();
 	}
 

@@ -3,7 +3,6 @@ package org.l3eta.turntable.tt;
 import java.util.ArrayList;
 
 import org.l3eta.turntable.util.Line;
-import org.l3eta.turntable.util.io.Logger;
 
 public class Song {
 	private User dj;
@@ -81,7 +80,6 @@ public class Song {
 	}
 	
 	public String toString() {
-		Logger.addToDatabase("songs", this.toDataSring());
 		return String.format("%s Played %s by %s. %s", this.getDjName(),
 					this.getSong(), this.getArtist(), this.getSongData());
 	}

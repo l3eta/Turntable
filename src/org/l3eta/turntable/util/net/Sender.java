@@ -10,7 +10,7 @@ public class Sender {
 	public Sender(Client client) {
 		Sender.client = client;
 	}
-	
+
 	public static void debug() {
 		addQueue("playlist:debug:");
 	}
@@ -37,7 +37,8 @@ public class Sender {
 		/**
 		 * Tells the bot you vote
 		 * 
-		 * @param up 	Weather to vote up or down.
+		 * @param up
+		 *            Weather to vote up or down.
 		 */
 		public static void vote(boolean up) {
 			Other.doAction("vote", up ? "up" : "down");
@@ -55,7 +56,7 @@ public class Sender {
 		public static void dj() {
 			Dj.doAction("dj");
 		}
-		
+
 		/**
 		 * Tells the bot you want him to skip his song.
 		 */
@@ -63,16 +64,18 @@ public class Sender {
 			Dj.doAction("skip");
 		}
 
-		/** 
+		/**
 		 * Tells the bot you want him to remove himself from DJ.
 		 */
 		public static void remDJ() {
 			Dj.doAction("rdj");
 		}
-		
+
 		/**
 		 * Tells the bot you want to boot someone from DJ.
-		 * @param data	UserID to boot from DJing.
+		 * 
+		 * @param data
+		 *            UserID to boot from DJing.
 		 */
 		public static void removeDJ(String data) {
 			Dj.doAction("rdj", data);
@@ -90,8 +93,11 @@ public class Sender {
 	public static class Mod {
 		/**
 		 * Tells the bot you want to boot a user.
-		 * @param userid	UserID of the user you want to boot.
-		 * @param reason	Reason of why your booting the user.
+		 * 
+		 * @param userid
+		 *            UserID of the user you want to boot.
+		 * @param reason
+		 *            Reason of why your booting the user.
 		 */
 		public static void boot(String userid, String reason) {
 			Mod.doAction("boot", String.format("%s-%s", userid, reason));
@@ -99,7 +105,9 @@ public class Sender {
 
 		/**
 		 * Tells the bot you want to add a room mod.
-		 * @param userid	UserID of User to make room mod.
+		 * 
+		 * @param userid
+		 *            UserID of User to make room mod.
 		 */
 		public static void addMod(String userid) {
 			Mod.doAction("add", userid);
@@ -107,7 +115,9 @@ public class Sender {
 
 		/**
 		 * Tells the bot you want to remove a room mod.
-		 * @param userid	UserID of User to make room mod.
+		 * 
+		 * @param userid
+		 *            UserID of User to make room mod.
 		 */
 		public static void remMod(String userid) {
 			Mod.doAction("rem", userid);
@@ -119,16 +129,18 @@ public class Sender {
 	}
 
 	public static class Playlist {
+		/**
+		 * Tells the bot you want to add a song.
+		 * 
+		 * @param data
+		 *            Song FileID @see {@code Song#getFileID()}
+		 */
 		public static void addSong(String data) {
 			Playlist.sendAction("addsong", data);
 		}
 
 		public static void removeSong(String data) {
 			Playlist.sendAction("remove", data);
-		}
-
-		public static void test(String data) {
-			Playlist.sendAction("s", "");
 		}
 
 		private static void sendAction(String command, String data) {
@@ -160,6 +172,7 @@ public class Sender {
 	}
 
 	public static void start(String[] info) {
-		Sender.addQueue(String.format("start:%s:%s:%s", info[0], info[1], info[2]));
+		Sender.addQueue(String.format("start:%s:%s:%s", info[0], info[1],
+				info[2]));
 	}
 }

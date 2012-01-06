@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 import org.l3eta.turntable.util.Line;
-import org.l3eta.turntable.util.io.Logger;
+import org.l3eta.turntable.util.io.FileManager;
 
 @SuppressWarnings("serial")
 public class User implements Serializable {
@@ -28,7 +28,7 @@ public class User implements Serializable {
 	}
 
 	public User(String userid) {
-		User user = Logger.loadUser(userid);
+		User user = FileManager.loadUser(userid);
 		this.name = user.getName();
 		this.avatar = user.getAvatar();
 		this.rank = user.getRank();
@@ -62,9 +62,20 @@ public class User implements Serializable {
 	public boolean isBlank() {
 		return this.userid.equals("Blank") && this.name.equals("Blank");
 	}
+	
+	public boolean setRank(Rank rank) {
+		boolean promoted = false;
+		if(rank.compareTo(this.getRank()) > 0) {
+			promoted = false;
+		} else if(rank.compareTo(this.getRank()) < 0){
+			promoted = true;
+		}
+		this.rank = rank;
+		return promoted;
+	}
 
 	public void save() {
-		Logger.saveUser(this);
+		FileManager.saveUser(this);
 	}
 
 	public String getUserID() {
@@ -261,7 +272,7 @@ public class User implements Serializable {
 				return User;
 			}
 		}
-
+		
 		public static Rank parseObject(Object object) {
 			return parseLine(new Line(String.valueOf(object)));
 		}
