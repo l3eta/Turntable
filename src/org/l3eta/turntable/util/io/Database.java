@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.l3eta.turntable.util.Line;
 
@@ -28,6 +29,10 @@ public class Database {
 			}
 		}
 		return null;
+	}
+	
+	public String getRandomLine() {
+		return lines.get(new Random().nextInt(lines.size()));
 	}
 
 	public void read() {
