@@ -3,11 +3,14 @@ package org.l3eta.turntable.tt;
 import org.l3eta.turntable.util.Line;
 
 public interface Bot {
+
+	public void init();
 	
 	public void reload();
-	public void init();
-
+	
 	public Room getRoom();
+	
+	public String getName();
 
 	public void onSnag(Line line);
 

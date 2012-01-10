@@ -9,6 +9,24 @@ public class Line {
 		this.line = line;
 	}
 	
+	public Line[] split(String data) {
+		String[] d = line.split(data);
+		Line[] lines = new Line[d.length];
+		for(int i = 0; i < d.length; i++) {
+			lines[i] = new Line(d[i]);
+		}
+		return lines;
+	}
+	
+	public Line[] split(Pattern p, String data) {
+		String[] d = p.split(data);
+		Line[] lines = new Line[d.length];
+		for(int i = 0; i < d.length; i++) {
+			lines[i] = new Line(d[i]);
+		}
+		return lines;
+	}
+	
 	public String getString(String o) {
 		String v = Pattern.compile(o + ": \"").split(line)[1];
 		return v.substring(0, v.indexOf("\""));
@@ -48,11 +66,15 @@ public class Line {
 		return line.substring(indexOf);
 	}
 	
-	public String substring(int indexOf, int end) { 
-		return line.substring(indexOf, end);
+	public Line substring(int indexOf, int end) { 
+		return new Line(line.substring(indexOf, end));
 	}
 	
 	public boolean contains(String string) {
 		return line.contains(string);
+	}
+
+	public boolean startsWith(String string) {
+		return line.startsWith(string);
 	}
 }

@@ -14,121 +14,89 @@ public class AfkListExample implements Bot {
 	private Room room = new Room("Room name");
 	public Users Users = room.Users;
 	private String[] info = { "auth", "userid", "roomid" };
-
-	private HashMap<String, Long> list = new HashMap<String, Long>();
+	private String name = "Example Bot";
 
 	public void init() {
 		Sender.start(info);
 	}
 
-	@Override
+	public String getName() {
+		return name;
+	}
+
 	public Room getRoom() {
 		return room;
 	}
 
-	@Override
 	public void onSnag(Line line) {
-		String uid = line.getString("userid");
-		list.put(uid, System.currentTimeMillis());
+		Users.getByID(line).updateActivity();
 	}
 
-	@Override
 	public void onRemMod(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onNewMod(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onRemDJ(Line line) {
-		String userid = line.getString("userid");
-		this.updateActivity(userid);
+		Users.getByID(line).updateActivity();
 	}
 
-	@Override
 	public void onUpdate(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onBooted(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onNewSong(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onNoSong(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onAddDJ(Line line) {
-		String userid = line.getString("userid");
-		this.updateActivity(userid);
+		Users.getByID(line).updateActivity();
 	}
 
-	@Override
 	public void onDeregister(Line line) {
-		User user = new User(line,
-				Users.getRankFromID(line.getString("userid")));
-		list.remove(user.getUserID());
-		room.Users.removeUser(Users.getIndex(user));
+		User user = new User(line);
+		Users.removeUser(user);
 		System.out.println(user.getName() + " has left the room!");
 	}
 
-	@Override
 	public void onVotes(Line line) {
-		String userid = line.getString("userid");
-		this.updateActivity(userid);
+		Users.getByID(line).updateActivity();
 	}
 
-	@Override
 	public void onRegister(Line line) {
-		User user = new User(line,
-				Users.getRankFromID(line.getString("userid")));
+		User user = new User(line);
 		Users.addUser(user);
-		list.put(user.getUserID(), System.currentTimeMillis());
 		System.out.println(user.getName() + " has joined the room!");
 	}
 
-	@Override
 	public void onSpeak(Line line) {
-		String userid = line.getString("userid");
-		this.updateActivity(userid);
+		Users.getByID(line).updateActivity();
 	}
 
-	@Override
 	public void onOther(Line line) {
-		// TODO Clean up this code a bit.
 		if (line.contains("users:{ ")) {
-			String[] users = Pattern.compile("[0-9]\\:\\{").split(
+			Line[] lines = line.split(Pattern.compile("[0-9]\\:\\{"),
 					line.substring(line.indexOf("users:{ ")));
-			for (String user : users) {
-				if (user.startsWith(" name:")) {
-					User u = new User(new Line("command: \"registered\" "
-							+ user));
-					this.updateActivity(u.getUserID());
-					Users.addUser(new User(new Line("command: \"registered\" "
-							+ user), Users.getRankFromID(u.getUserID())));
+			for (Line l : lines) {
+				if (l.startsWith(" name:")) {
+					Users.addUser(new User(l));
 				}
 			}
 		}
 	}
 
-	@Override
 	public void reload() {
-		// TODO Auto-generated method stub
-
-	}
-	
-	public void updateActivity(String userid) {
-		list.put(userid, System.currentTimeMillis());
+		// TODO Add your own code here.
 	}
 }

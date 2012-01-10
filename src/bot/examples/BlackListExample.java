@@ -9,96 +9,83 @@ import org.l3eta.turntable.util.net.Sender;
 
 public class BlackListExample implements Bot {
 	private Room room = new Room("Room name");
-	
+	private String name = "Example Bot";
 	private String[] info = { "auth", "userid", "roomid" };
 	private ArrayList<String> blackList = new ArrayList<String>();
-	
+
 	public void init() {
 		Sender.start(info);
-		// TODO Auto-generated method stub
 	}
 
-	@Override
 	public Room getRoom() {
 		return room;
 	}
+	
+	public String getName() {
+		return name;
+	}
 
-	@Override
 	public void onSnag(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onRemMod(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onNewMod(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onRemDJ(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onUpdate(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onBooted(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onNewSong(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onNoSong(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onAddDJ(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onDeregister(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onVotes(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onRegister(Line line) {
 		String userid = line.getString("userid");
-		if(blackList.contains(userid)) {
+		if (blackList.contains(userid)) {
 			Sender.Mod.boot(userid, "You are blacklist!");
 		}
 	}
 
-	@Override
 	public void onSpeak(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onOther(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void reload() {
-		// TODO Auto-generated method stub
-		
+		// TODO Add your own code here.
+
 	}
 }

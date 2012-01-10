@@ -9,11 +9,11 @@ import org.l3eta.turntable.util.io.FileManager;
 @SuppressWarnings("serial")
 public class User implements Serializable {
 	protected String name, userid, laptop, lastseen;
-	protected int points, fans, avatar;
+	protected Integer points, fans, avatar;
 	protected Rank rank = Rank.User;
 	protected Stats stats;
 	protected Date created;
-
+	protected Long activity;
 	// acl, created;
 
 	public User() {
@@ -25,6 +25,7 @@ public class User implements Serializable {
 		this.avatar = -1;
 		this.rank = Rank.User;
 		this.stats = new Stats();
+		this.activity = System.currentTimeMillis();
 	}
 
 	public User(String userid) {
@@ -36,6 +37,7 @@ public class User implements Serializable {
 		this.points = user.getPoints();
 		this.stats = user.getStats();
 		this.userid = user.getUserID();
+		this.activity = System.currentTimeMillis();
 	}
 
 	public User(Line line) {
@@ -46,19 +48,17 @@ public class User implements Serializable {
 		this.fans = line.getInt("fans");
 		this.avatar = line.getInt("avatarid");
 		this.stats = new Stats();
+		this.activity = System.currentTimeMillis();
+	}
+	
+	public void updateActivity() {
+		this.activity = System.currentTimeMillis();
 	}
 
-	public User(Line line, Rank rank) {
-		this.name = line.getString("name");
-		this.laptop = line.getString("laptop");
-		this.userid = line.getString("userid");
-		this.points = line.getInt("points");
-		this.fans = line.getInt("fans");
-		this.avatar = line.getInt("avatarid");
-		this.rank = rank;
-		this.stats = new Stats();
+	public Long getActivity() {
+		return this.activity;
 	}
-
+	
 	public boolean isBlank() {
 		return this.userid.equals("Blank") && this.name.equals("Blank");
 	}
@@ -245,15 +245,15 @@ public class User implements Serializable {
 
 		public boolean compare(Rank rank) {
 			if (this == Owner)
-				return this.compareTo(Owner) <= 0;
+				return this.compareTo(rank) <= 0;
 			else if (this == Admin)
-				return this.compareTo(Admin) <= 0;
+				return this.compareTo(rank) <= 0;
 			else if (this == Mod)
-				return this.compareTo(Mod) <= 0;
+				return this.compareTo(rank) <= 0;
 			else if (this == Friend)
-				return this.compareTo(Friend) <= 0;
+				return this.compareTo(rank) <= 0;
 			else if (this == Producer)
-				return this.compareTo(Producer) <= 0;
+				return this.compareTo(rank) <= 0;
 			return false;
 		}
 

@@ -12,109 +12,91 @@ import org.l3eta.turntable.util.net.Sender;
 public class UserListExample implements Bot {
 	private Room room = new Room("Room name");
 	public Users Users = room.Users;
+	private String name = "Example Bot";
 	private String[] info = { "auth", "userid", "roomid" };
 
 	public void init() {
 		Sender.start(info);
 	}
 
-	@Override
 	public Room getRoom() {
 		return room;
 	}
+	
+	public String getName() {
+		return name;
+	}
 
-	@Override
 	public void onSnag(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onRemMod(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onNewMod(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onRemDJ(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onUpdate(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onBooted(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onNewSong(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onNoSong(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onAddDJ(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onDeregister(Line line) {
-		User user = new User(line,
-				Users.getRankFromID(line.getString("userid")));
-		room.Users.removeUser(Users.getIndex(user));
+		User user = new User(line);
+		Users.removeUser(user);
 		System.out.println(user.getName() + " has left the room!");
 	}
 
-	@Override
 	public void onVotes(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onRegister(Line line) {
-		User user = new User(line,
-				Users.getRankFromID(line.getString("userid")));
+		User user = new User(line);
 		Users.addUser(user);
 		System.out.println(user.getName() + " has joined the room!");
 	}
 
-	@Override
 	public void onSpeak(Line line) {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 	}
 
-	@Override
 	public void onOther(Line line) {
-		//TODO Clean up this code a bit.
 		if (line.contains("users:{ ")) {
-			String[] users = Pattern.compile("[0-9]\\:\\{").split(
+			Line[] lines = line.split(Pattern.compile("[0-9]\\:\\{"),
 					line.substring(line.indexOf("users:{ ")));
-			for (String user : users) {
-				if (user.startsWith(" name:")) {
-					User u = new User(new Line("command: \"registered\" "
-							+ user));
-					Users.addUser(new User(new Line(
-							"command: \"registered\" " + user), Users
-							.getRankFromID(u.getUserID())));
+			for (Line l : lines) {
+				if (l.startsWith(" name:")) {
+					Users.addUser(new User(l));
 				}
 			}
 		}
 	}
 
-	@Override
 	public void reload() {
-		// TODO Auto-generated method stub
+		// TODO Add your own code here.
 
 	}
 }

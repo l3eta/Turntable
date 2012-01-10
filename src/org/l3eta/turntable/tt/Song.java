@@ -10,6 +10,7 @@ public class Song {
 	private int[] votes = { 0, 0 };
 	private int snags = 0, length = 0;
 	private ArrayList<String> snaggers = new ArrayList<String>();
+	
 	public Song(User dj, Line line) {
 		this.dj = dj;
 		this.artist = line.getString("artist");
