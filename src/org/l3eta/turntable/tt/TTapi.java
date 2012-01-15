@@ -110,7 +110,6 @@ public class TTapi {
 		}
 		if (data.equals("~m~10~m~no_session")) {
 			self.userAuthenticate();
-			self.join();
 			return;
 		}
 		this.lastActivity = new Date();
@@ -240,12 +239,12 @@ public class TTapi {
 		rq.setAPI("room.register");
 		if (roomid != null) {
 			rq.set("roomid", roomid);
-			this.ws.close();
-			this.ws = getWebSocket(chatServers[0]);
+			self.ws.close();
+			self.ws = getWebSocket(chatServers[0]);
 		} else {
 			rq.set("roomid", this.roomid);
 		}
-		this._send(rq, null);
+		self._send(rq, null);
 	}
 
 	public void roomInfo() {
@@ -337,16 +336,34 @@ public class TTapi {
 	}
 
 	public void bootUser(String userid, String reason) {
-		DataLine rq = new DataLine();
-		rq.setAPI("room.boot_user");
-		rq.set("roomid", roomid);
-		rq.set("target_userid", userid);
-		rq.set("reason", reason);
+		Object[][] _rq = { { "api", "room.boot_user" }, { "roomid", roomid },
+				{ "target_userid", userid }, { "reason", reason } };
+		DataLine rq = new DataLine(_rq);
 		self._send(rq, null);
 	}
 
 	public void snag() {
-		// TODO
+		snag(false);
+	}
+
+	public void snag(boolean addSong) {
+		String sh = sha(String.valueOf(Math.random()));
+		String fh = sha(String.valueOf(Math.random()));
+		String i = String.format("%s/%s/%s/%s/%s/%s/%s/%s", this.userid,
+				this.currentDjID, this.currentSongID, this.roomid, "queue",
+				"board", "false", sh);
+		String vh = sha(i);
+		Object[][] _rq = { { "api", "snag.add" }, { "djid", this.currentDjID },
+				{ "songid", currentSongID }, { "roomid", roomid },
+				{ "site", "queue" }, { "location", "board" },
+				{ "in_queue", "false" }, { "vh", vh }, { "sh", sh },
+				{ "fh", fh } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
+
+		if (addSong) {
+
+		}
 	}
 
 	public void vote(boolean up) {
@@ -361,8 +378,129 @@ public class TTapi {
 		this._send(rq, null);
 	}
 
-	public void join() {
-		this.roomRegister(null);
+	public void playlistAdd() {
+		playlistAdd("default");
+	}
+
+	public void playlistAdd(String playlist) {
+		playlistAdd(playlist, currentSongID);
+	}
+
+	public void playlistAdd(String playlist, String songid) {
+		playlistAdd(playlist, songid, 0);
+	}
+
+	public void playlistAdd(String playlist, String songid, int index) {
+		Object[][] _rq = { { "api", "playlist.add" },
+				{ "playlist_name", playlist }, { "index", index } };
+		DataLine rq = new DataLine(_rq);
+		rq.setArray("song_dict", new Object[][] { { "fileid", songid } });
+		this._send(rq, null);
+	}
+
+	public void playlistRemove() {
+		playlistRemove("default");
+	}
+
+	public void playlistRemove(String playlist) {
+		playlistRemove(playlist, 0);
+	}
+
+	public void playlistRemove(String playlist, int index) {
+		Object[][] _rq = { { "api", "playlist.remove" },
+				{ "playlist_name", playlist }, { "index", index } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
+	}
+
+	public void userInfo() {
+		Object[][] _rq = { { "api", "user.info" } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
+	}
+
+	public void modifyProfile(Line profile) {
+		DataLine rq = new DataLine();
+		rq.setAPI("user.modify_profile");
+		try {
+			if(profile.getString("name") != null)
+				rq.set("name", profile.getString("name"));
+			if(profile.getString("twitter") != null)
+				rq.set("twitter", profile.getString("twitter"));
+			if(profile.getString("facebook") != null) 
+				rq.set("facebook", profile.getString("facebook"));
+			if(profile.getString("website") != null) 
+				rq.set("website", profile.getString("website"));
+			if(profile.getString("about") != null) 
+				rq.set("about", profile.getString("about"));
+			if(profile.getString("topartists") != null) 
+				rq.set("topartists", profile.getString("topartists"));
+			if(profile.getString("hangout") != null) 
+				rq.set("hangout", profile.getString("hangout"));
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		this._send(rq, null);
+	}
+
+	public void getFanOf() {
+		Object[][] _rq = { { "api", "user.get_fan_of" } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
+	}
+
+	public void getProfile() {
+		getProfile(null);
+	}
+
+	public void getProfile(String userid) {
+		Object[][] _rq = { { "api", "user.get_profile" } };
+		if (userid != null)
+			_rq = new Object[][] { { "api", "user.get_profile" },
+					{ "userid", userid } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
+	}
+
+	public void modifyLaptop(String laptop) {
+		Object[][] _rq = { { "api", "user.modify" }, { "laptop", laptop } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
+	}
+
+	public void modifyName(String name) {
+		Object[][] _rq = { { "api", "user.modify" }, { "name", name } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
+	}
+
+	public void setAvatar(int id) {
+		Object[][] _rq = { { "api", "user.set_avatar" }, { "avatarid", id } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
+	}
+
+	public void removeFan(String userid) {
+		Object[][] _rq = { { "api", "user.remove_fan" }, { "djid", userid } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
+	}
+
+	public void playlistReorder() {
+		playlistReorder("default");
+	}
+
+	public void playlistReorder(String playlist) {
+		playlistReorder(playlist, 0, 0);
+	}
+
+	public void playlistReorder(String playlist, int indexFrom, int indexTo) {
+		Object[][] _rq = { { "api", "playlist.reorder" },
+				{ "playlist_name", playlist }, { "index_from", indexFrom },
+				{ "index_to", indexTo } };
+		DataLine rq = new DataLine(_rq);
+		this._send(rq, null);
 	}
 
 	public void listRooms(Object skip) {
@@ -397,6 +535,7 @@ public class TTapi {
 		DataLine rq = new DataLine(_rq);
 		self._isConnected = true;
 		self._send(rq, null);
+		self.roomRegister(null);
 	}
 
 	public String sha(String text) {
@@ -404,13 +543,11 @@ public class TTapi {
 		try {
 			MessageDigest md = MessageDigest.getInstance("sha1");
 			md.update(text.getBytes());
-
 			for (byte b : md.digest()) {
 				key.append(Integer.toHexString((0xff & b) | 0xffffff00)
 						.substring(6));
 			}
 		} catch (Exception ex) {
-
 		}
 		return key.toString();
 	}
@@ -425,10 +562,13 @@ public class TTapi {
 		public DataLine(Object[][] o) {
 			this.sb = new StringBuilder();
 			for (int i = 0; i < o.length; i++) {
-				Object _o1 = o[i][0];
-				Object _o2 = o[i][1];
-				set(_o1, _o2);
+				set(o[i][0], o[i][1]);
 			}
+		}
+
+		public void setArray(Object o, Object[][] _o) {
+			DataLine d = new DataLine(_o);
+			set(o, d.toString());
 		}
 
 		public DataLine(Object data) {
@@ -441,15 +581,13 @@ public class TTapi {
 		}
 
 		private void set(Object o, Object v) {
-			String _o = String.valueOf(o);
-			String sV = "";
-			if (_o.equals("msgid")) {
-				sV = String.valueOf(v);
-			} else {
-				sV = "\"" + String.valueOf(v) + "\"";
+			String _o = String.valueOf(o), _v = String.valueOf(v);
+			if (!_o.equals("msgid")) {
+				if (!_v.startsWith("{"))
+					_v = "\"" + _v + "\"";
 			}
-			String oV = "\"" + String.valueOf(o) + "\"";
-			sb.append(oV + ": " + sV + ", ");
+			_o = "\"" + _o + "\"";
+			sb.append(_o + ": " + _v + ", ");
 		}
 
 		public String toString() {

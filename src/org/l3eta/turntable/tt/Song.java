@@ -75,7 +75,7 @@ public class Song {
 
 	public String getSongData() {
 		return String
-				.format(" [+%d, -%d, (SNAG)%d]", votes[0], votes[1], snags);
+				.format("[+%d, -%d, \u2665%d]", votes[0], votes[1], snags);
 	}
 
 	public String toConsole() {

@@ -90,8 +90,12 @@ public class Line {
 	}
 
 	public String getString(String o) {
-		String v = Pattern.compile(o + ": \"").split(line)[1];
-		return v.substring(0, v.indexOf("\""));
+		try {
+			String v = Pattern.compile(o + ": \"").split(line)[1];
+			return v.substring(0, v.indexOf("\""));
+		} catch(Exception ex) {			
+		}
+		return null;
 	}
 
 	public boolean equals(Object obj) {
