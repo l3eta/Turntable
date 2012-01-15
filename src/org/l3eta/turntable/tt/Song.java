@@ -10,15 +10,16 @@ public class Song {
 	private int[] votes = { 0, 0 };
 	private int snags = 0, length = 0;
 	private ArrayList<String> snaggers = new ArrayList<String>();
-	
+
 	public Song(User dj, Line line) {
 		this.dj = dj;
 		this.artist = line.getString("artist");
 		this.song = line.getString("song");
 		this.fileid = line.getString("_id");
 		this.resetData();
+
 	}
-	
+
 	private void resetData() {
 		this.snaggers.clear();
 		this.snags = 0;
@@ -33,7 +34,7 @@ public class Song {
 		snaggers.add(uid);
 		snags++;
 	}
-	
+
 	public ArrayList<String> getSnaggers() {
 		return this.snaggers;
 	}
@@ -41,11 +42,11 @@ public class Song {
 	public String getSong() {
 		return song;
 	}
-	
+
 	public int getLength() {
 		return this.length;
 	}
-	
+
 	public String getFileID() {
 		return fileid;
 	}
@@ -57,7 +58,7 @@ public class Song {
 	public int getSnags() {
 		return snags;
 	}
-	
+
 	public User getDj() {
 		return dj;
 	}
@@ -65,23 +66,25 @@ public class Song {
 	public String getDjName() {
 		return this.dj.getName();
 	}
-	
+
 	public String toDataSring() {
-		return String.format("{Song:{ artist: \"%s\", song: \"%s\", _id: \"%s\"}}", artist, song, fileid);
+		return String.format(
+				"{Song:{ artist: \"%s\", song: \"%s\", _id: \"%s\"}}", artist,
+				song, fileid);
 	}
 
 	public String getSongData() {
 		return String
 				.format(" [+%d, -%d, (SNAG)%d]", votes[0], votes[1], snags);
 	}
-	
-	public void toConsole() {
-		System.out.println(String.format("%s started playing %s by %s.",
-				this.getDjName(), this.getSong(), this.getArtist()));
+
+	public String toConsole() {
+		return String.format("%s started playing %s by %s.", this.getDjName(),
+				this.getSong(), this.getArtist());
 	}
-	
+
 	public String toString() {
 		return String.format("%s Played %s by %s. %s", this.getDjName(),
-					this.getSong(), this.getArtist(), this.getSongData());
+				this.getSong(), this.getArtist(), this.getSongData());
 	}
 }

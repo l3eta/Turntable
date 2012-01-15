@@ -5,22 +5,24 @@ import java.util.HashMap;
 
 import org.l3eta.turntable.tt.User.Rank;
 import org.l3eta.turntable.util.Line;
-import org.l3eta.turntable.util.net.Sender;
+import org.l3eta.turntable.util.io.FileManager;
 
 public class Room {
 	public Users Users = new Users();
-
+	private FileManager fileManager = null;
 	private ArrayList<User> userList = new ArrayList<User>();
 	private HashMap<String, Rank> modList = new HashMap<String, Rank>();
 	private HashMap<String, String> banList = new HashMap<String, String>();
-	// private ArrayList<User> djs = new ArrayList<User>(); //TODO LATER
+	private ArrayList<String> hasSeen = new ArrayList<String>();
 	private Song currentSong;
 	private String name = "Default Room Name";
-	private Object[] greeting = { "Welcome to %s, %s. Please enjoy your stay!",
-			new Object[] { getName(), "Filler" } };
 
 	public Room(String name) {
 		this.name = name;
+	}
+
+	public void setFileManager(FileManager fileManager) {
+		this.fileManager = fileManager;
 	}
 
 	/**
@@ -58,20 +60,6 @@ public class Room {
 	}
 
 	/**
-	 * 
-	 * @param user
-	 *            The User to greet.
-	 * @return Formatted String of User.getName() and Room.getName()
-	 */
-	public String getGreeting(User user) {
-		return String.format(String.valueOf(greeting[0]), greeting[1]);
-	}
-
-	public void setGretting(String greeting, Object... objs) {
-		this.greeting = new Object[] { greeting, new Object[] { objs } };
-	}
-
-	/**
 	 * Gets the current song.
 	 * 
 	 * @return The room's current song.
@@ -92,6 +80,15 @@ public class Room {
 
 	public class Users {
 		/**
+		 * Gets all the users to an Array of user
+		 * 
+		 * @return Array of Users
+		 */
+		public User[] getUsers() {
+			return userList.toArray(new User[0]);
+		}
+
+		/**
 		 * Adds User to the room.
 		 * 
 		 * @param user
@@ -100,9 +97,16 @@ public class Room {
 		public void addUser(User user) {
 			if (userList.contains(user))
 				return;
+			if (!hasSeen(user.getUserID()))
+				hasSeen.add(user.getUserID());
 			user.setRank(getRank(user));
-			user.save();
+			if (fileManager != null)
+				user.save(fileManager);
 			userList.add(user);
+		}
+
+		public boolean hasSeen(String userid) {
+			return hasSeen.contains(userid);
 		}
 
 		/**
@@ -112,7 +116,8 @@ public class Room {
 		 *            User to remove.
 		 */
 		public void removeUser(User user) {
-			user.save();
+			if (fileManager != null)
+				user.save(fileManager);
 			userList.remove(getIndex(user));
 		}
 
@@ -125,9 +130,14 @@ public class Room {
 		}
 
 		public User getByID(Line line) {
-			return getByID(line.getString("userid"));
+			try {
+				return getByID(line.getString("userid"));
+			} catch (Exception ex) {
+
+			}
+			return getByID(line.toString());
 		}
-		
+
 		public User getByID(String userid) {
 			for (int i = 0; i < userList.size(); i++) {
 				if (userList.get(i).getUserID().equals(userid))
@@ -149,11 +159,11 @@ public class Room {
 		public Rank getRank(User user) {
 			return getRank(user.getUserID());
 		}
-		
+
 		public Rank getRank(Line line) {
 			return getRank(line.getString("userid"));
 		}
-		
+
 		public Rank getRank(String userid) {
 			if (modList.containsKey(userid)) {
 				return modList.get(userid);
@@ -175,11 +185,36 @@ public class Room {
 			if (user.isBlank())
 				return;
 			banList.put(user.getUserID(), reason);
-			Sender.Mod.boot(user.getUserID(), reason);
+
 		}
 
 		public int getCount() {
 			return userList.size() - 1;
+		}
+
+		public class Throttle extends Thread {
+			private int time = toMins(2);
+
+			public Throttle(int time) {
+				this.time = toMins(time);
+			}
+
+			public int toMins(int time) {
+				return (time * 1000) * 60;
+			}
+
+			public void run() {
+				while (true) {
+					if (hasSeen.size() > 0) {
+						hasSeen.remove(0);
+					}
+					try {
+						Thread.sleep(time);
+					} catch (Exception ex) {
+
+					}
+				}
+			}
 		}
 	}
 }

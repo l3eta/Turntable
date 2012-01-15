@@ -2,16 +2,16 @@ package bot.examples;
 
 import org.l3eta.turntable.tt.Bot;
 import org.l3eta.turntable.tt.Room;
+import org.l3eta.turntable.util.BotManager.BotWindow;
 import org.l3eta.turntable.util.Line;
-import org.l3eta.turntable.util.net.Sender;
 
-public class AutoBopExample implements Bot {
+public class AutoBopExample extends Bot {
 	private Room room = new Room("Room name");
 	private String name = "Example Bot";
 	private String[] info = { "auth", "userid", "roomid" };
 
 	public void init() {
-		Sender.start(info);
+		this.start(info);
 	}
 
 	public Room getRoom() {
@@ -43,11 +43,11 @@ public class AutoBopExample implements Bot {
 	}
 
 	public void onBooted(Line line) {
-		Sender.Other.vote(true);
+		// TODO Add your own code here.
 	}
 
 	public void onNewSong(Line line) {
-		// TODO Add your own code here.
+		api.vote(true);
 	}
 
 	public void onNoSong(Line line) {
@@ -80,6 +80,18 @@ public class AutoBopExample implements Bot {
 
 	public void reload() {
 		// TODO Add your own code here.
+
+	}
+
+	@Override
+	public void setBotWindow(BotWindow window) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onEndSong() {
+		// TODO Auto-generated method stub
 
 	}
 }

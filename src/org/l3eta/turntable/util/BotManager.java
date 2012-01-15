@@ -6,15 +6,17 @@ import java.awt.EventQueue;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
@@ -24,6 +26,7 @@ import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -36,16 +39,19 @@ import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.text.Document;
 
 import org.l3eta.turntable.tt.Bot;
 
 public class BotManager extends JFrame {
+	private static final long serialVersionUID = 1L;
 	private Image icon;
 	private JPanel contentPane;
-	private boolean hasLoader = false;
-	private HashMap<BotWindow, Bot> bots = new HashMap<BotWindow, Bot>();
-	
-	
+	private JDesktopPane desktopPane;
+
+	private String node = "node";
+	private ArrayList<Bot> bots = new ArrayList<Bot>();
+
 	/**
 	 * Launch the application.
 	 */
@@ -62,18 +68,12 @@ public class BotManager extends JFrame {
 		});
 	}
 
-	
-	public String getNode() {
-		String home = System.getProperty("user.home");
-		
-		
-			
-		
-		return home;
+	public void killAll() {
+		for (int i = 0; i < bots.size(); i++) {
+			// bots.get(i).getRoom().close();
+		}
 	}
-	/**
-	 * Create the frame.
-	 */
+
 	public BotManager() {
 		try {
 			icon = ImageIO.read(new File("./images/", "icon.png"));
@@ -81,26 +81,35 @@ public class BotManager extends JFrame {
 			e.printStackTrace();
 		}
 		setIconImage(icon);
-		setTitle("BotManager");
+		setTitle("Bot Manager");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
-
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent arg0) {
+				killAll();
+			}
+		});
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
 		JMenu mnNewMenu = new JMenu("File");
 		menuBar.add(mnNewMenu);
-		
+
 		JMenuItem mntmNewConsole = new JMenuItem("New Bot");
 		mntmNewConsole.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if(!hasLoader) {
-					new FileDialog().setVisible(true);
-					hasLoader = true;
-				}				
+				new FileDialog().setVisible(true);
 			}
 		});
 		mnNewMenu.add(mntmNewConsole);
+
+		JMenuItem mntmSettings = new JMenuItem("Settings");
+		mntmSettings.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+			}
+		});
+		mnNewMenu.add(mntmSettings);
 
 		JMenuItem mntmExit = new JMenuItem("Exit");
 		mnNewMenu.add(mntmExit);
@@ -108,43 +117,106 @@ public class BotManager extends JFrame {
 		contentPane.setBorder(null);
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
-
-		JDesktopPane desktopPane = new JDesktopPane();
+		desktopPane = new JDesktopPane();
 		contentPane.add(desktopPane, BorderLayout.CENTER);
-
-		JInternalFrame internalFrame = new BotWindow("New Bot");
-		internalFrame.setBounds(53, 11, 316, 189);
-		desktopPane.add(internalFrame);
+		if (node == null) {
+			boolean yes = showDialog(
+					"NodeJS path has not been set-up, Would you like to set it up now?",
+					"Question.") == 0;
+			if (yes) {
+				new SettingsDialog().setVisible(true);
+			}
+		}
 	}
-	
+
+	public int showDialog(String msg, String title) {
+		return JOptionPane.showConfirmDialog(null, msg, title, 0);
+	}
+
 	public void loadBot(Bot bot) {
-		
+		if (node == null) {
+			boolean yes = showDialog(
+					"Bot failed to load: Could not find NodeJS, Would you like to set NodeJS's path?",
+					"Error!") == 0;
+			if (yes) {
+				new SettingsDialog().setVisible(true);
+			}
+			return;
+		}
+		BotWindow window = new BotWindow(bot.getName(), bot);
+		bot.setBotWindow(window);
+		bots.add(bot);
+		window.setBounds(53, 11, 316, 189);
+		desktopPane.add(window);
 	}
 
 	public class BotWindow extends JInternalFrame {
 		private static final long serialVersionUID = 682783358630156701L;
 		private JTextField textField;
 		private JTextPane textPane;
+		private JScrollPane scrollPane;
+		private Bot bot;
 
-		public BotWindow(String title) {
+		public BotWindow(String title, Bot bot) {
 			super(title);
+			this.bot = bot;
+
 			setClosable(true);
 			setResizable(true);
 			setIconifiable(true);
 			setMaximizable(true);
 			textField = new JTextField();
+			textField.addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent ze) {
+					if (ze.getKeyCode() == KeyEvent.VK_ENTER) {
+						handleCommand(textField.getText());
+						textField.setText("");
+					}
+				}
+			});
 			textField.setForeground(Color.WHITE);
 			textField.setBackground(Color.BLACK);
 			getContentPane().add(textField, BorderLayout.SOUTH);
 			textField.setColumns(10);
 
-			JScrollPane scrollPane = new JScrollPane();
+			scrollPane = new JScrollPane();
 			getContentPane().add(scrollPane, BorderLayout.CENTER);
 			textPane = new JTextPane();
 			textPane.setForeground(Color.WHITE);
 			textPane.setBackground(Color.BLACK);
 			scrollPane.setViewportView(textPane);
 			setVisible(true);
+			bot.init();
+		}
+
+		private void handleCommand(String command) {
+			if (command.equals("end")) {
+				close(false);
+			} else if (command.equals("restart")) {
+				close(true);
+			} else if (command.startsWith("ban")) {
+				String name = command.replace("ban", "");
+				bot.getRoom().Users.banUser(name, "Banned");
+			}
+		}
+
+		private void close(boolean restart) {
+			/*
+			 * bot.getRoom().getSender().close(); if (!restart) { dispose();
+			 * bots.remove(bot); return; }
+			 */
+			// TODO handle restart
+		}
+
+		public void addToConsole(String data) {
+			try {
+				Document doc = textPane.getDocument();
+				doc.insertString(doc.getLength(), data + "\n", null);
+				textPane.select(doc.getLength() - 1, doc.getLength() - 1);
+			} catch (Exception ex) {
+
+			}
 		}
 	}
 
@@ -161,7 +233,7 @@ public class BotManager extends JFrame {
 		public FileDialog() {
 			setIconImage(icon);
 			setTitle("Bot Loader");
-			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 			setBounds(100, 100, 450, 300);
 			contentPane = new JPanel();
 			contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -216,22 +288,16 @@ public class BotManager extends JFrame {
 
 		private void handleLoad() {
 			boolean loaded = false;
-			try {
-				Class<?> c = Class.forName(path);
-				Object bot = c.newInstance();
-				if (bot instanceof Bot) {
-					Bot b = (Bot) bot;
-					String msg = String
-							.format("Are you sure you want to load the bot for room '%s'",
-									b.getRoom().getName());
-					int i = JOptionPane.showConfirmDialog(null, msg,
-							"Are you sure?", 0);
-					loaded = i == 0;
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
+			Bot bot = null;
+			Object o = forFile(botFile);
+			if (o instanceof Bot) {
+				bot = (Bot) o;
+				String msg = String.format(
+						"Are you sure you want to load '%s'?", bot.getName());
+				loaded = showDialog(msg, "Are you sure?") == 0;
 			}
-			if (loaded) {
+			if (loaded && bot != null) {
+				loadBot(bot);
 				this.dispose();
 			}
 		}
@@ -242,6 +308,20 @@ public class BotManager extends JFrame {
 				builder.append(args[i] + separator);
 			}
 			return builder.toString();
+		}
+
+		private Object forFile(File file) {
+			Object botClass = null;
+			try {
+				URL url = new URL("file://"
+						+ file.getPath().replace(file.getName(), ""));
+				ClassLoader cl = new URLClassLoader(new URL[] { url });
+				botClass = cl.loadClass(file.getName().replace(".class", ""))
+						.newInstance();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return botClass;
 		}
 
 		public class FileTable extends JTable {
@@ -281,9 +361,7 @@ public class BotManager extends JFrame {
 								+ curr.substring(0, curr.length() - 1));
 					} else {
 						botFile = getFile(getSelectedRow());
-						System.out
-								.println(((Bot) forFile(getFile(getSelectedRow())))
-										.getRoom().getName());
+						textPath.setText(botFile.getAbsolutePath());
 					}
 				}
 			}
@@ -297,22 +375,6 @@ public class BotManager extends JFrame {
 						}
 					}
 				}
-			}
-
-			private Object forFile(File file) {
-				Object botClass = null;
-				try {
-					URL url = new URL("file://"
-							+ file.getPath().replace(file.getName(), ""));
-					URL[] urls = new URL[] { url };
-					ClassLoader cl = new URLClassLoader(urls);
-					System.out.println(url);
-					botClass = cl.loadClass(
-							file.getName().replace(".class", "")).newInstance();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				return botClass;
 			}
 
 			private void clearList() {
@@ -348,6 +410,55 @@ public class BotManager extends JFrame {
 			public Icon getIcon(File file) {
 				return file.isFile() ? file_icon : folder_icon;
 			}
+		}
+	}
+
+	public class SettingsDialog extends JFrame {
+		private static final long serialVersionUID = 1L;
+		private JPanel contentPane;
+		private JTextField nodePath;
+
+		public SettingsDialog() { // TODO Update
+			setTitle("Settings Dialog");
+			setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			this.addWindowListener(new WindowAdapter() {
+				public void windowClosing(WindowEvent arg0) {
+
+				}
+			});
+			setBounds(100, 100, 253, 107);
+			contentPane = new JPanel();
+			contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+			setContentPane(contentPane);
+			contentPane.setLayout(null);
+
+			JLabel lblNewLabel = new JLabel("Node JS:");
+			lblNewLabel.setBounds(10, 11, 46, 14);
+			contentPane.add(lblNewLabel);
+
+			nodePath = new JTextField();
+			nodePath.setText("Path To NodeJS");
+			nodePath.setBounds(66, 8, 161, 20);
+			contentPane.add(nodePath);
+			nodePath.setColumns(10);
+
+			JButton btnNewButton = new JButton("Apply");
+			btnNewButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					node = nodePath.getText();
+				}
+			});
+			btnNewButton.setBounds(83, 39, 67, 23);
+			contentPane.add(btnNewButton);
+
+			JButton btnNewButton_1 = new JButton("Close");
+			btnNewButton_1.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					dispose();
+				}
+			});
+			btnNewButton_1.setBounds(160, 39, 67, 23);
+			contentPane.add(btnNewButton_1);
 		}
 	}
 }

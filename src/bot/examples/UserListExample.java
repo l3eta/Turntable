@@ -4,25 +4,25 @@ import java.util.regex.Pattern;
 
 import org.l3eta.turntable.tt.Bot;
 import org.l3eta.turntable.tt.Room;
-import org.l3eta.turntable.tt.User;
 import org.l3eta.turntable.tt.Room.Users;
+import org.l3eta.turntable.tt.User;
+import org.l3eta.turntable.util.BotManager.BotWindow;
 import org.l3eta.turntable.util.Line;
-import org.l3eta.turntable.util.net.Sender;
 
-public class UserListExample implements Bot {
+public class UserListExample extends Bot {
 	private Room room = new Room("Room name");
-	public Users Users = room.Users;
+	private Users Users = room.Users;
 	private String name = "Example Bot";
 	private String[] info = { "auth", "userid", "roomid" };
 
 	public void init() {
-		Sender.start(info);
+		start(info);
 	}
 
 	public Room getRoom() {
 		return room;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -97,6 +97,18 @@ public class UserListExample implements Bot {
 
 	public void reload() {
 		// TODO Add your own code here.
+
+	}
+
+	@Override
+	public void setBotWindow(BotWindow window) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onEndSong() {
+		// TODO Auto-generated method stub
 
 	}
 }

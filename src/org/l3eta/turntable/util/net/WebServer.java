@@ -39,7 +39,9 @@ public class WebServer {
 
 	public void sendChat(String text, User user) {
 		Object[] _data = { user.getName(), user.getRank().toString(), text };
-		String data = String.format("{ \"api\": \"chat\", \"name\": \"%s\", \"rank\": \"%s\", \"text\": \"%s\" }", _data);		
+		String data = String
+				.format("{ \"api\": \"chat\", \"name\": \"%s\", \"rank\": \"%s\", \"text\": \"%s\" }",
+						_data);
 		write(data);
 	}
 }

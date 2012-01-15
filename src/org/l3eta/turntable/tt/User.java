@@ -9,11 +9,13 @@ import org.l3eta.turntable.util.io.FileManager;
 @SuppressWarnings("serial")
 public class User implements Serializable {
 	protected String name, userid, laptop, lastseen;
-	protected Integer points, fans, avatar;
-	protected Rank rank = Rank.User;
+	protected Integer points, fans, avatar, songs;
+	protected Rank rank;
+	protected Boolean isDj;
 	protected Stats stats;
 	protected Date created;
 	protected Long activity;
+
 	// acl, created;
 
 	public User() {
@@ -23,13 +25,14 @@ public class User implements Serializable {
 		this.points = -10;
 		this.fans = -10;
 		this.avatar = -1;
+		this.songs = 0;
+		this.isDj = false;
 		this.rank = Rank.User;
 		this.stats = new Stats();
 		this.activity = System.currentTimeMillis();
 	}
 
-	public User(String userid) {
-		User user = FileManager.loadUser(userid);
+	public User(User user) {
 		this.name = user.getName();
 		this.avatar = user.getAvatar();
 		this.rank = user.getRank();
@@ -38,6 +41,8 @@ public class User implements Serializable {
 		this.stats = user.getStats();
 		this.userid = user.getUserID();
 		this.activity = System.currentTimeMillis();
+		this.isDj = false;
+		this.songs = 0;
 	}
 
 	public User(Line line) {
@@ -48,34 +53,53 @@ public class User implements Serializable {
 		this.fans = line.getInt("fans");
 		this.avatar = line.getInt("avatarid");
 		this.stats = new Stats();
+		this.rank = Rank.User;
 		this.activity = System.currentTimeMillis();
+		this.isDj = false;
+		this.songs = 0;
 	}
-	
+
+	public int getSongs() {
+		return this.songs;
+	}
+
+	public void addSong() {
+		this.songs++;
+	}
+
 	public void updateActivity() {
 		this.activity = System.currentTimeMillis();
+	}
+
+	public boolean isDj() {
+		return this.isDj;
+	}
+
+	public void setDj(boolean isDj) {
+		this.isDj = isDj;
 	}
 
 	public Long getActivity() {
 		return this.activity;
 	}
-	
+
 	public boolean isBlank() {
 		return this.userid.equals("Blank") && this.name.equals("Blank");
 	}
-	
+
 	public boolean setRank(Rank rank) {
 		boolean promoted = false;
-		if(rank.compareTo(this.getRank()) > 0) {
+		if (rank.compareTo(this.getRank()) > 0) {
 			promoted = false;
-		} else if(rank.compareTo(this.getRank()) < 0){
+		} else if (rank.compareTo(this.getRank()) < 0) {
 			promoted = true;
 		}
 		this.rank = rank;
 		return promoted;
 	}
 
-	public void save() {
-		FileManager.saveUser(this);
+	public void save(FileManager fileManager) {
+		fileManager.saveUser(this);
 	}
 
 	public String getUserID() {
@@ -235,10 +259,6 @@ public class User implements Serializable {
 			return this.points;
 		}
 	}
-	
-	public static void main(String[] args) {
-		System.out.println(Rank.Admin.compareTo(Rank.Mod));
-	}
 
 	public enum Rank {
 		User, Producer, Friend, Mod, Admin, Owner;
@@ -254,28 +274,28 @@ public class User implements Serializable {
 				return this.compareTo(rank) <= 0;
 			else if (this == Producer)
 				return this.compareTo(rank) <= 0;
-			return false;
+			else
+				return User.compareTo(rank) <= 0;
 		}
 
 		public static Rank parseLine(Line line) {
-			if (line.equals("owner")) {
+			if (line.equals("owner"))
 				return Owner;
-			} else if (line.equals("admin")) {
+			else if (line.equals("admin"))
 				return Admin;
-			} else if (line.equals("mod")) {
+			else if (line.equals("mod"))
 				return Mod;
-			} else if (line.equals("friend")) {
+			else if (line.equals("friend"))
 				return Friend;
-			} else if (line.equals("producer")) {
+			else if (line.equals("producer"))
 				return Producer;
-			} else {
+			else
 				return User;
-			}
-		}
-		
-		public static Rank parseObject(Object object) {
-			return parseLine(new Line(String.valueOf(object)));
 		}
 	}
 
+	public void setName(String name) {
+		this.name = name;
+		this.getStats().addNameChange();
+	}
 }

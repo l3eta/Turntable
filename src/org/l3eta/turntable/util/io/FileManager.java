@@ -10,16 +10,26 @@ import java.io.FileWriter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.l3eta.turntable.tt.User;
+import org.l3eta.turntable.tt.User.Rank;
+import org.l3eta.turntable.util.Line;
 
 public class FileManager {
-	private static String data = "data\\";
-	private static String logs = data + "logs\\";
-	private static String db = data + "db\\";
-	private static String users = db + "users\\";
+	private String data;
+	private String logs = data + "logs\\";
+	private String db = data + "db\\";
+	private String users = db + "users\\";
 
-	public static void log(String file, String data) {
+	public FileManager(String data) {
+		this.data = "data\\" + data + "\\";
+		logs = this.data + "logs\\";
+		db = this.data + "db\\";
+		users = db + "users\\";
+	}
+
+	public void log(String file, String data) {
 		File f = new File(logs, file + ".log");
 		try {
 			if (!f.exists())
@@ -33,11 +43,11 @@ public class FileManager {
 		}
 	}
 
-	public static void addToDatabase(String file, String data) {
-		new Database(file).append(data);
+	public void addToDatabase(String file, String data) {
+		new Database(db, file).append(data);
 	}
 
-	public static User loadUser(String userid) {
+	public User loadUser(String userid) {
 		File f = new File(users, userid + ".sav");
 		try {
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(f));
@@ -52,7 +62,7 @@ public class FileManager {
 		return new User();
 	}
 
-	public static void saveUser(User user) {
+	public void saveUser(User user) {
 		File f = new File(users, user.getUserID() + ".sav");
 		try {
 			if (!f.exists())
@@ -67,20 +77,30 @@ public class FileManager {
 		}
 	}
 
-	public static ArrayList<String[]> loadCommands(File file) {
-		ArrayList<String[]> commands = new ArrayList<String[]>();
+	public HashMap<String, Rank> loadCommands() {
+		File file = new File(data, "bot.settings");
+		HashMap<String, Rank> commands = new HashMap<String, Rank>();
+		Line[] lines = readFile(file);
+		for (Line line : lines) {
+			if (line.startsWith("command:")) {
+				Line[] data = line.substring(8).split(":");
+				commands.put(data[0].toString(), Rank.parseLine(data[1]));
+			}
+		}
+		return commands;
+	}
+
+	public Line[] readFile(File file) {
+		ArrayList<Line> lines = new ArrayList<Line>();
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(file));
 			String line;
 			while ((line = in.readLine()) != null) {
-				if (line.startsWith("command:")) {
-					commands.add(line.replace("command:", "").split(":"));
-				}
+				lines.add(new Line(line));
 			}
-			return commands;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		return null;
+		return lines.toArray(new Line[0]);
 	}
 }

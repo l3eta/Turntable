@@ -4,23 +4,23 @@ import java.util.ArrayList;
 
 import org.l3eta.turntable.tt.Bot;
 import org.l3eta.turntable.tt.Room;
+import org.l3eta.turntable.util.BotManager.BotWindow;
 import org.l3eta.turntable.util.Line;
-import org.l3eta.turntable.util.net.Sender;
 
-public class BlackListExample implements Bot {
+public class BlackListExample extends Bot {
 	private Room room = new Room("Room name");
 	private String name = "Example Bot";
 	private String[] info = { "auth", "userid", "roomid" };
 	private ArrayList<String> blackList = new ArrayList<String>();
 
 	public void init() {
-		Sender.start(info);
+		start(info);
 	}
 
 	public Room getRoom() {
 		return room;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -72,7 +72,7 @@ public class BlackListExample implements Bot {
 	public void onRegister(Line line) {
 		String userid = line.getString("userid");
 		if (blackList.contains(userid)) {
-			Sender.Mod.boot(userid, "You are blacklist!");
+			api.bootUser(userid, "You are blacklist!");
 		}
 	}
 
@@ -86,6 +86,18 @@ public class BlackListExample implements Bot {
 
 	public void reload() {
 		// TODO Add your own code here.
+
+	}
+
+	@Override
+	public void setBotWindow(BotWindow window) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onEndSong() {
+		// TODO Auto-generated method stub
 
 	}
 }

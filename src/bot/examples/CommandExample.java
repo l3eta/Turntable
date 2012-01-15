@@ -2,16 +2,16 @@ package bot.examples;
 
 import org.l3eta.turntable.tt.Bot;
 import org.l3eta.turntable.tt.Room;
+import org.l3eta.turntable.util.BotManager.BotWindow;
 import org.l3eta.turntable.util.Line;
-import org.l3eta.turntable.util.net.Sender;
 
-public class CommandExample implements Bot {
+public class CommandExample extends Bot {
 	private Room room = new Room("Room name");
 	private String name = "Example Bot";
 	private String[] info = { "auth", "userid", "roomid" };
 
 	public void init() {
-		Sender.start(info);
+		start(info);
 	}
 
 	public Room getRoom() {
@@ -77,7 +77,7 @@ public class CommandExample implements Bot {
 			String[] args = text.split(" ");
 			Line cmd = new Line(args[0]);
 			if (cmd.equals("hello")) {
-				Sender.Talk.speak(String.format("Hi %s, How are you?", name));
+				api.speak(String.format("Hi %s, How are you?", name));
 			}
 		}
 	}
@@ -88,6 +88,18 @@ public class CommandExample implements Bot {
 
 	public void reload() {
 		// TODO Add your own code here.
+
+	}
+
+	@Override
+	public void setBotWindow(BotWindow window) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onEndSong() {
+		// TODO Auto-generated method stub
 
 	}
 }
