@@ -9,6 +9,8 @@ public class Line {
 	public Line(String line) {
 		this.line = line;
 	}
+	
+	
 
 	public Line complete(int start) {
 		String[] args = line.split(" ");
@@ -109,10 +111,13 @@ public class Line {
 		String v = Pattern.compile(o + ": ").split(line)[1];
 		return Integer.parseInt(v.substring(0, v.indexOf(i)));
 	}
-
+	
 	public double getDouble(String o) {
+		String i = ", ";
+		if (o.equals("avatarid"))
+			i = "}";
 		String v = Pattern.compile(o + ": ").split(line)[1];
-		return Double.parseDouble(v.substring(0, v.indexOf(", ")));
+		return Double.parseDouble(v.substring(0, v.indexOf(i)));
 	}
 
 	public String toString() {

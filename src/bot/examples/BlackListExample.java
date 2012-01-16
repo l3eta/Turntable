@@ -72,7 +72,7 @@ public class BlackListExample extends Bot {
 	public void onRegister(Line line) {
 		String userid = line.getString("userid");
 		if (blackList.contains(userid)) {
-			api.bootUser(userid, "You are blacklist!");
+			bootUser(userid, "You are blacklist!");
 		}
 	}
 

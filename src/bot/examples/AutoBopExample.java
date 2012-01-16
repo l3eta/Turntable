@@ -47,7 +47,7 @@ public class AutoBopExample extends Bot {
 	}
 
 	public void onNewSong(Line line) {
-		api.vote(true);
+		vote(true);
 	}
 
 	public void onNoSong(Line line) {

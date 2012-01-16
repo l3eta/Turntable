@@ -77,7 +77,7 @@ public class CommandExample extends Bot {
 			String[] args = text.split(" ");
 			Line cmd = new Line(args[0]);
 			if (cmd.equals("hello")) {
-				api.speak(String.format("Hi %s, How are you?", name));
+				speak(String.format("Hi %s, How are you?", name));
 			}
 		}
 	}

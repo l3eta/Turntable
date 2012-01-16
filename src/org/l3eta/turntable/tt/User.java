@@ -50,8 +50,9 @@ public class User implements Serializable {
 		this.laptop = line.getString("laptop");
 		this.userid = line.getString("userid");
 		this.points = line.getInt("points");
+		
 		this.fans = line.getInt("fans");
-		this.avatar = line.getInt("avatarid");
+		this.avatar = (int) line.getDouble("avatarid");
 		this.stats = new Stats();
 		this.rank = Rank.User;
 		this.activity = System.currentTimeMillis();
@@ -158,6 +159,11 @@ public class User implements Serializable {
 						rank.toString(), stats);
 	}
 
+	public void setName(String name) {
+		this.name = name;
+		this.getStats().addNameChange();
+	}
+
 	public class Stats implements Serializable {
 		public int[] data = { 0, 0, 0, 0, 0, 0 };
 		private int points = data[0], fans = data[1], plays = data[2];
@@ -260,6 +266,80 @@ public class User implements Serializable {
 		}
 	}
 
+	
+	public class Profile implements Serializable {
+		private String name, website, twitter, facebook, about, topartists, hangout;
+		
+		public Profile() {
+			this.setName(null);
+			this.setWebsite(null);
+			this.setTwitter(null);
+			this.setFacebook(null);
+			this.setAbout(null);		
+			this.setTopartists(null);			
+			this.setHangout(null);
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getWebsite() {
+			return website;
+		}
+
+		public void setWebsite(String website) {
+			this.website = website;
+		}
+
+		public String getFacebook() {
+			return facebook;
+		}
+
+		public void setFacebook(String facebook) {
+			this.facebook = facebook;
+		}
+
+		public String getTwitter() {
+			return twitter;
+		}
+
+		public void setTwitter(String twitter) {
+			this.twitter = twitter;
+		}
+
+		public String getAbout() {
+			return about;
+		}
+
+		public void setAbout(String about) {
+			this.about = about;
+		}
+
+		public String getTopartists() {
+			return topartists;
+		}
+
+		public void setTopartists(String topartists) {
+			this.topartists = topartists;
+		}
+
+		public String getHangout() {
+			return hangout;
+		}
+
+		public void setHangout(String hangout) {
+			this.hangout = hangout;
+		}
+		
+		public Line toLine() {
+			return new Line("about: \"%s\", topartists: \"%s\"");
+		}
+	}
 	public enum Rank {
 		User, Producer, Friend, Mod, Admin, Owner;
 
@@ -292,10 +372,5 @@ public class User implements Serializable {
 			else
 				return User;
 		}
-	}
-
-	public void setName(String name) {
-		this.name = name;
-		this.getStats().addNameChange();
 	}
 }
