@@ -50,7 +50,6 @@ public class Database {
 			}
 			hasRead = true;
 		} else {
-			db.mkdirs();
 			try {
 				db.createNewFile();
 			} catch (IOException e) {

@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
 
 import net.tootallnate.websocket.WebSocketClient;
 
-import org.l3eta.turntable.util.Line;
 import org.l3eta.turntable.util.BotManager.BotWindow;
+import org.l3eta.turntable.util.Line;
 
 @SuppressWarnings("unused")
 public abstract class Bot {
@@ -66,6 +66,11 @@ public abstract class Bot {
 		};
 		this._msgId = 0;
 		return ws;
+	}
+	
+	public void close() {
+		
+		ws.close();
 	}
 
 	public void _send(DataLine rq, Object callback) {

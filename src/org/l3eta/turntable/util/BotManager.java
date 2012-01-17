@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Image;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -12,8 +14,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -23,10 +25,10 @@ import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -48,13 +50,9 @@ public class BotManager extends JFrame {
 	private Image icon;
 	private JPanel contentPane;
 	private JDesktopPane desktopPane;
-
-	private String node = "node";
 	private ArrayList<Bot> bots = new ArrayList<Bot>();
+	private JCheckBoxMenuItem settingsItem;
 
-	/**
-	 * Launch the application.
-	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -70,14 +68,26 @@ public class BotManager extends JFrame {
 
 	public void killAll() {
 		for (int i = 0; i < bots.size(); i++) {
-			// bots.get(i).getRoom().close();
+			bots.get(i).close();
 		}
 	}
 
 	public BotManager() {
 		try {
 			icon = ImageIO.read(new File("./images/", "icon.png"));
-		} catch (IOException e) {
+			TrayIcon tray = new TrayIcon(icon);
+			tray.setImageAutoSize(true);
+			tray.setToolTip("Turntable Bot Manager");
+			tray.addMouseListener(new MouseAdapter() {
+				public void mouseClicked(MouseEvent arg0) {
+					if (!isVisible()) {
+						setVisible(true);
+						setState(0);
+					}
+				}
+			});
+			SystemTray.getSystemTray().add(tray);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		setIconImage(icon);
@@ -87,6 +97,16 @@ public class BotManager extends JFrame {
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent arg0) {
 				killAll();
+			}
+		});
+		addWindowStateListener(new WindowStateListener() {
+			@Override
+			public void windowStateChanged(WindowEvent e) {
+				System.out.println(e.getNewState());
+				int n = e.getNewState();
+				if ((n == 1 || n == 7) && settingsItem.isSelected()) {
+					setVisible(false);
+				}
 			}
 		});
 		JMenuBar menuBar = new JMenuBar();
@@ -103,13 +123,13 @@ public class BotManager extends JFrame {
 		});
 		mnNewMenu.add(mntmNewConsole);
 
-		JMenuItem mntmSettings = new JMenuItem("Settings");
-		mntmSettings.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-
-			}
+		settingsItem = new JCheckBoxMenuItem("Minimize to tray");
+		settingsItem.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent arg0) {
+				setTray();
+			}			
 		});
-		mnNewMenu.add(mntmSettings);
+		mnNewMenu.add(settingsItem);
 
 		JMenuItem mntmExit = new JMenuItem("Exit");
 		mnNewMenu.add(mntmExit);
@@ -119,14 +139,10 @@ public class BotManager extends JFrame {
 		setContentPane(contentPane);
 		desktopPane = new JDesktopPane();
 		contentPane.add(desktopPane, BorderLayout.CENTER);
-		if (node == null) {
-			boolean yes = showDialog(
-					"NodeJS path has not been set-up, Would you like to set it up now?",
-					"Question.") == 0;
-			if (yes) {
-				new SettingsDialog().setVisible(true);
-			}
-		}
+	}
+
+	public void setTray() {
+		settingsItem.setSelected(!settingsItem.isSelected());
 	}
 
 	public int showDialog(String msg, String title) {
@@ -134,15 +150,6 @@ public class BotManager extends JFrame {
 	}
 
 	public void loadBot(Bot bot) {
-		if (node == null) {
-			boolean yes = showDialog(
-					"Bot failed to load: Could not find NodeJS, Would you like to set NodeJS's path?",
-					"Error!") == 0;
-			if (yes) {
-				new SettingsDialog().setVisible(true);
-			}
-			return;
-		}
 		BotWindow window = new BotWindow(bot.getName(), bot);
 		bot.setBotWindow(window);
 		bots.add(bot);
@@ -196,16 +203,19 @@ public class BotManager extends JFrame {
 			} else if (command.equals("restart")) {
 				close(true);
 			} else if (command.startsWith("ban")) {
-				String name = command.replace("ban", "");
-				bot.getRoom().Users.banUser(name, "Banned");
+				bot.getRoom().Users.banUser(command.substring(4), "Banned");
+				bot.bootUser(bot.getRoom().Users
+						.getByName(command.substring(4)).getUserID(), "Banned");
 			}
 		}
 
 		private void close(boolean restart) {
-			/*
-			 * bot.getRoom().getSender().close(); if (!restart) { dispose();
-			 * bots.remove(bot); return; }
-			 */
+			bot.close();
+			if (!restart) {
+				dispose();
+				bots.remove(bot);
+				return;
+			}
 			// TODO handle restart
 		}
 
@@ -410,55 +420,6 @@ public class BotManager extends JFrame {
 			public Icon getIcon(File file) {
 				return file.isFile() ? file_icon : folder_icon;
 			}
-		}
-	}
-
-	public class SettingsDialog extends JFrame {
-		private static final long serialVersionUID = 1L;
-		private JPanel contentPane;
-		private JTextField nodePath;
-
-		public SettingsDialog() { // TODO Update
-			setTitle("Settings Dialog");
-			setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-			this.addWindowListener(new WindowAdapter() {
-				public void windowClosing(WindowEvent arg0) {
-
-				}
-			});
-			setBounds(100, 100, 253, 107);
-			contentPane = new JPanel();
-			contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-			setContentPane(contentPane);
-			contentPane.setLayout(null);
-
-			JLabel lblNewLabel = new JLabel("Node JS:");
-			lblNewLabel.setBounds(10, 11, 46, 14);
-			contentPane.add(lblNewLabel);
-
-			nodePath = new JTextField();
-			nodePath.setText("Path To NodeJS");
-			nodePath.setBounds(66, 8, 161, 20);
-			contentPane.add(nodePath);
-			nodePath.setColumns(10);
-
-			JButton btnNewButton = new JButton("Apply");
-			btnNewButton.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					node = nodePath.getText();
-				}
-			});
-			btnNewButton.setBounds(83, 39, 67, 23);
-			contentPane.add(btnNewButton);
-
-			JButton btnNewButton_1 = new JButton("Close");
-			btnNewButton_1.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					dispose();
-				}
-			});
-			btnNewButton_1.setBounds(160, 39, 67, 23);
-			contentPane.add(btnNewButton_1);
 		}
 	}
 }

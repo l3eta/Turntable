@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.l3eta.turntable.tt.Room;
 import org.l3eta.turntable.tt.User;
 import org.l3eta.turntable.tt.User.Rank;
 import org.l3eta.turntable.util.Line;
@@ -27,6 +28,18 @@ public class FileManager {
 		logs = this.data + "logs\\";
 		db = this.data + "db\\";
 		users = db + "users\\";
+		makeDirs();
+	}
+	
+	public String getDataFolder() {
+		return data;
+	}
+	
+	public void makeDirs() {
+		new File(data).mkdirs();
+		new File(logs).mkdir();
+		new File(db).mkdir();
+		new File(users).mkdir();
 	}
 
 	public void log(String file, String data) {
@@ -75,24 +88,13 @@ public class FileManager {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-	}
-
-	public HashMap<String, Rank> loadCommands() {
-		File file = new File(data, "bot.settings");
-		HashMap<String, Rank> commands = new HashMap<String, Rank>();
-		Line[] lines = readFile(file);
-		for (Line line : lines) {
-			if (line.startsWith("command:")) {
-				Line[] data = line.substring(8).split(":");
-				commands.put(data[0].toString(), Rank.parseLine(data[1]));
-			}
-		}
-		return commands;
-	}
+	}	
 
 	public Line[] readFile(File file) {
 		ArrayList<Line> lines = new ArrayList<Line>();
 		try {
+			if(!file.exists())
+				file.createNewFile();
 			BufferedReader in = new BufferedReader(new FileReader(file));
 			String line;
 			while ((line = in.readLine()) != null) {
@@ -102,5 +104,28 @@ public class FileManager {
 			ex.printStackTrace();
 		}
 		return lines.toArray(new Line[0]);
+	}
+	
+	public void loadCommands(HashMap<String, Rank> commands) {
+		File file = new File(data, "bot.settings");
+		Line[] lines = readFile(file);
+		for (Line line : lines) {
+			if (line.startsWith("command:")) {
+				Line[] data = line.substring(8).split(":");
+				commands.put(data[0].toString(), Rank.parseLine(data[1]));
+			}
+		}
+	}
+	
+
+	public void loadMods(Room room) {
+		File file = new File(data, "bot.settings");
+		Line[] lines = readFile(file);
+		for (Line line : lines) {
+			if (line.startsWith("mod:")) {
+				Line[] data = line.substring(4).split(":");
+				room.addMod(data[0].toString(), Rank.parseLine(data[1]));
+			}
+		}
 	}
 }

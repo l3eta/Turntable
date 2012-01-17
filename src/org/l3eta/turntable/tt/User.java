@@ -49,9 +49,8 @@ public class User implements Serializable {
 		this.name = line.getString("name");
 		this.laptop = line.getString("laptop");
 		this.userid = line.getString("userid");
-		this.points = line.getInt("points");
-		
-		this.fans = line.getInt("fans");
+		this.points = (int) line.getDouble("points");		
+		this.fans = (int) line.getDouble("fans");
 		this.avatar = (int) line.getDouble("avatarid");
 		this.stats = new Stats();
 		this.rank = Rank.User;

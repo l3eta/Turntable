@@ -185,7 +185,7 @@ public class Room {
 			if (user.isBlank())
 				return;
 			banList.put(user.getUserID(), reason);
-
+			
 		}
 
 		public int getCount() {
