@@ -14,7 +14,10 @@ public class GeneratedLayout extends GroupLayout {
 		super(c);
 		h = createParallelGroup(Alignment.LEADING);
 		v = createSequentialGroup().addContainerGap();
-	}
+		setHorizontalGroup(createParallelGroup(Alignment.LEADING).addGroup(createSequentialGroup().addContainerGap().addGroup(h)));
+		setVerticalGroup(createParallelGroup(Alignment.LEADING).addGroup(v));
+		c.setLayout(this);
+	}	
 
 	public void addSingle(Component c, int hPref, int vPref) {
 		h.addComponent(c, GroupLayout.PREFERRED_SIZE, hPref, GroupLayout.PREFERRED_SIZE);
@@ -23,10 +26,5 @@ public class GeneratedLayout extends GroupLayout {
 
 	public void addPair(Component c, Component c1, int spacing) {
 		//TODO
-	}
-
-	public void set() {
-		setHorizontalGroup(createParallelGroup(Alignment.LEADING).addGroup(createSequentialGroup().addContainerGap().addGroup(h)));
-		setVerticalGroup(createParallelGroup(Alignment.LEADING).addGroup(v));
 	}
 }

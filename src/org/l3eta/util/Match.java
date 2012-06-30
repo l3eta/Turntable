@@ -1,4 +1,4 @@
-package org.l3eta.tt.util;
+package org.l3eta.util;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

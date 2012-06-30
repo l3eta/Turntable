@@ -25,14 +25,6 @@ public class Song {
 		down = 0;
 	}
 
-	public Song() {
-		id = null;
-	}
-	
-	public boolean isNull() {
-		return id == null;
-	}
-
 	public String getID() {
 		return id;
 	}

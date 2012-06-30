@@ -22,5 +22,9 @@ public final class ChatEvent extends UserEvent {
 
 	public enum ChatType {
 		PM, MAIN;
+		
+		public boolean isMain() {
+			return this == MAIN;
+		}
 	}
 }

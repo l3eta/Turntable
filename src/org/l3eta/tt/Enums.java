@@ -18,6 +18,10 @@ public class Enums {
 		public String toString() {
 			return name().toLowerCase();
 		}
+
+		public static Status get(String string) {
+			return valueOf(string.toUpperCase());
+		}
 	}
 
 	public enum TurntableCommand {
@@ -29,10 +33,14 @@ public class Enums {
 	}
 
 	public enum Laptop {
-		LINUX, PC, MAC, IPHONE, CHROME, ANDROID;
+		PC, LINUX, CHROME, MAC, IPHONE, ANDROID;
 
 		public static Laptop get(String laptop) {
 			return valueOf(laptop.toUpperCase());
+		}
+
+		public boolean isPhone() {
+			return this == IPHONE || this == ANDROID;
 		}
 	}
 

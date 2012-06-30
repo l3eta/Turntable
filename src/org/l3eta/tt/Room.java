@@ -29,8 +29,14 @@ public final class Room {
 		banList = new HashMap<String, String>();
 	}
 
-	protected void setRoomID(String id) {
-		this.id = id;
+	public void setData(RoomData data) {
+		users.addUsers(data.getUsers());
+		if (data.getDjCount() > 0) {
+			for (String d : data.getDjs()) {
+				addDj(getUsers().getByID(d));
+			}
+		}
+		setCurrentSong(data.getSong());
 	}
 
 	public void lockRoom(String message) {
@@ -212,8 +218,6 @@ public final class Room {
 			return userList.indexOf(user);
 		}
 
-		// Ranking
-
 		// Banning
 		public String getBanReason(User user) {
 			return banList.get(user.getID());
@@ -227,24 +231,15 @@ public final class Room {
 			return banList.containsKey(userid);
 		}
 
-		public void ban(String name, String reason) {
-			ban(getByName(name), reason);
-		}
-
 		public void ban(User user, String reason) {
 			if (user.isNull())
 				return;
-			banList.put(user.getID(), reason);
-			bot.boot(user, reason);
+
 		}
 
-		/**
-		 * Gets the total number of User's in the room.
-		 * 
-		 * @return Number of User's
-		 */
-		public int getCount() {
-			return userList.size() - 1;
+		public void ban(String userid, String reason) {
+			banList.put(userid, reason);
+			bot.boot(userid, reason);
 		}
 
 		public void addUsers(BasicDBList list) {
@@ -255,6 +250,16 @@ public final class Room {
 			for (User user : users) {
 				addUser(user);
 			}
+		}
+
+		public void unban(User user) {
+			if (user.isNull())
+				return;
+			unban(user.getID());
+		}
+
+		public void unban(String id) {
+			banList.remove(id);
 		}
 	}
 
@@ -272,5 +277,195 @@ public final class Room {
 
 	public void saveUser(User user) {
 		bot.getDatabase().saveUser(user);
+	}
+
+	// TODO RoomData
+	public static class RoomData {
+		private String roomid, name, name_lower, shortcut, privacy, currentDj;
+		private String[] mods, djs;
+		private double created;
+		private boolean djFull;
+		private int downvotes, pointLimit, maxDjs, upvotes, listeners, djCount, maxUsers;
+		private ArrayList<User> users;
+		private User creator;
+		private Song song;
+		private String chatServer;
+		private int chatPort;
+
+		public RoomData(Message json) {
+			this(json, false);
+		}
+
+		public RoomData(Message json, boolean isDGR) {
+			// TODO add in sticker placements
+			users = new ArrayList<User>();
+			if (!isDGR) {
+				if (json.getBoolean("success")) {
+					Message to;
+					for (Message user : json.getMessageList("users")) {
+						users.add(new User(user));
+					}
+					to = new Message(json.get("room"));
+					name = to.getString("name");
+					name_lower = to.getString("name_lower");
+					shortcut = to.getString("shortcut");
+					roomid = to.getString("roomid");
+					created = to.getDouble("created");
+					to = to.getSubObject("metadata");
+					creator = new User(to.getSubObject("creator"));
+					try {
+						song = new Song(to.getSubObject("current_song"), false);
+					} catch (Exception ex) {
+						song = null;
+					}
+					djFull = to.getBoolean("dj_full");
+					downvotes = to.getInt("downvotes");
+					privacy = to.getString("privacy");
+					upvotes = to.getInt("upvotes");
+					pointLimit = to.getInt("djthreshold");
+					mods = to.getStringList("moderator_id");
+					djs = to.getStringList("djs");
+					maxDjs = to.getInt("max_djs");
+					currentDj = to.getString("current_dj");
+					listeners = to.getInt("listeners");
+					djCount = to.getInt("djcount");
+					maxUsers = to.getInt("max_size");
+					// votelog = temp.get("votelog");
+					// stickerPlacements = temp.get("sticker_placements");
+					// songlog = temp.get("songlog");
+
+				}
+			} else {
+				Message to;
+				BasicDBList tl;
+				for (Message user : json.getMessageList("users")) {
+					users.add(new User(user));
+				}
+				to = new Message(json.get("room"));
+				tl = to.getList("chatserver");
+				chatServer = tl.get(0).toString();
+				chatPort = Integer.parseInt(tl.get(1).toString());
+
+				name = to.getString("name");
+				name_lower = to.getString("name_lower");
+				shortcut = to.getString("shortcut");
+				roomid = to.getString("roomid");
+				created = to.getDouble("created");
+				to = to.getSubObject("metadata");
+				creator = new User(to.getSubObject("creator"));
+				try {
+					song = new Song(to.getSubObject("current_song"), false);
+				} catch (Exception ex) {
+					song = null;
+				}
+				djFull = to.getBoolean("dj_full");
+				downvotes = to.getInt("downvotes");
+				privacy = to.getString("privacy");
+				upvotes = to.getInt("upvotes");
+				pointLimit = to.getInt("djthreshold");
+				mods = to.getStringList("moderator_id");
+				djs = to.getStringList("djs");
+				maxDjs = to.getInt("max_djs");
+				currentDj = to.getString("current_dj");
+				listeners = to.getInt("listeners");
+				djCount = to.getInt("djcount");
+				maxUsers = to.getInt("max_size");
+				// votelog = temp.get("votelog");
+				// stickerPlacements = temp.get("sticker_placements");
+				// songlog = temp.get("songlog");
+
+			}
+
+		}
+
+		public String[] getMods() {
+			return mods;
+		}
+
+		public String[] getDjs() {
+			return djs;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getNameLower() {
+			return name_lower;
+		}
+
+		public String getID() {
+			return roomid;
+		}
+
+		public String getShortcut() {
+			return shortcut;
+		}
+
+		public String getPrivacy() {
+			return privacy;
+		}
+
+		public String getCurrentDj() {
+			return currentDj;
+		}
+
+		public String getChatServer() {
+			return chatServer;
+		}
+
+		public double getCreated() {
+			// TODO change this to a timestamp;
+			return created;
+		}
+
+		public int getChatPort() {
+			return chatPort;
+		}
+
+		public int getUpVotes() {
+			return upvotes;
+		}
+
+		public int getMaxUsers() {
+			return maxUsers;
+		}
+
+		public int getDownVotes() {
+			return downvotes;
+		}
+
+		public int getPointLimit() {
+			return pointLimit;
+		}
+
+		public int getDjCount() {
+			return djCount;
+		}
+
+		public int getListeners() {
+			return listeners;
+		}
+
+		public int getMaxDjs() {
+			return maxDjs;
+		}
+
+		public boolean isDeckFull() {
+			return djFull;
+		}
+
+		public User getCreator() {
+			return creator;
+		}
+
+		public User[] getUsers() {
+			return users.toArray(new User[0]);
+		}
+
+		public Song getSong() {
+			return song;
+		}
+
 	}
 }

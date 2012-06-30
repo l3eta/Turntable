@@ -79,6 +79,7 @@ public abstract class WebSocket extends Thread {
 	public abstract void onMessage(String message);
 
 	public void close() {
+		//TODO add in normal close;
 		try {			
 			channel.close();
 		}  catch(Exception ex) {

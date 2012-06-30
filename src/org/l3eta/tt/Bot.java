@@ -1,6 +1,8 @@
 package org.l3eta.tt;
 
-import java.security.MessageDigest;
+import static org.l3eta.util.Crypto.hash;
+import static org.l3eta.util.Crypto.randHash;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,21 +11,17 @@ import org.l3eta.tt.Enums.LogLevel;
 import org.l3eta.tt.Enums.Status;
 import org.l3eta.tt.Enums.TurntableCommand;
 import org.l3eta.tt.Enums.Vote;
-import org.l3eta.tt.Song;
 import org.l3eta.tt.Room.Users;
-import org.l3eta.tt.manager.BotWindow;
-import org.l3eta.tt.manager.EventManager;
-import org.l3eta.tt.task.RepeatingTask;
-import org.l3eta.tt.user.Profile;
+import org.l3eta.tt.command.Command;
 import org.l3eta.tt.db.Database;
 import org.l3eta.tt.db.DefaultDatabase;
 import org.l3eta.tt.event.ChatEvent;
+import org.l3eta.tt.event.ChatEvent.ChatType;
 import org.l3eta.tt.event.DjEvent;
 import org.l3eta.tt.event.EndSongEvent;
 import org.l3eta.tt.event.ModEvent;
 import org.l3eta.tt.event.NoSongEvent;
 import org.l3eta.tt.event.RoomChangeEvent;
-import org.l3eta.tt.event.RoomChangeEvent.RoomData;
 import org.l3eta.tt.event.RoomUpdateEvent;
 import org.l3eta.tt.event.SnagEvent;
 import org.l3eta.tt.event.SongEvent;
@@ -32,9 +30,15 @@ import org.l3eta.tt.event.UserJoinEvent;
 import org.l3eta.tt.event.UserLeaveEvent;
 import org.l3eta.tt.event.UserUpdateEvent;
 import org.l3eta.tt.event.VoteEvent;
-import org.l3eta.tt.event.ChatEvent.ChatType;
+import org.l3eta.tt.manager.BotWindow;
+import org.l3eta.tt.manager.CommandManager;
+import org.l3eta.tt.manager.EventManager;
+import org.l3eta.tt.task.RepeatingTask;
+import org.l3eta.tt.user.Profile;
 import org.l3eta.tt.util.BotMessage;
 import org.l3eta.tt.util.BotMessage.MessageCallback;
+import org.l3eta.tt.util.DirectoryGraph;
+import org.l3eta.tt.util.DirectoryGraph.DirectoryGraphCallback;
 import org.l3eta.tt.util.External;
 import org.l3eta.tt.util.External.ExternalAPICallback;
 import org.l3eta.tt.util.Message;
@@ -42,35 +46,41 @@ import org.l3eta.tt.util.Timestamp;
 import org.l3eta.tt.ws.WebSocket;
 
 import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
 
 public class Bot {
-	public static final String version = "3.0.0";
-
+	public static final String version = "3.0.1";
 	private String auth, roomid, clientid, userid;
 	private int msgid, debugLevel;
-	private boolean allowExternalPM, debug;
+	private boolean externalPMs, debug, closed, loaded;
 
 	private Database database;
 	private Room room = null;
 	private List<BotMessage> requests;
 	private List<Song> playlist;
 	private List<String> fanOf;
+	private char[] commandStarts;
 	private User self;
 	private WebSocket ws;
 	private EventManager eventManager;
+	private CommandManager commandManager;
 	private BotWindow window;
 	private Timestamp lastActivity, lastHeartbeat, startTime;
+	private RepeatingTask presenceTask;
+
+	public final int DEFAULT_DEBUG = 0, RAW_DEBUG = 1, API_DEBUG = 5;
+	public final int STRICT = 10, STRICT_API = STRICT + API_DEBUG, STRICT_RAW = RAW_DEBUG + STRICT;
 
 	public Bot() {
 		if (room == null) {
 			room = new Room(this);
 			Song.setRoom(room);
 		}
+		commandStarts = new char[] { '/', '*', '-', '.', '!', '~', '^' };
 		playlist = new ArrayList<Song>();
 		fanOf = new ArrayList<String>();
 		requests = new ArrayList<BotMessage>();
 		eventManager = new EventManager();
+		commandManager = new CommandManager(this);
 		msgid = 0;
 		database = new DefaultDatabase("default");
 	}
@@ -80,7 +90,6 @@ public class Bot {
 		this.auth = auth;
 		this.userid = userid;
 		this.roomid = roomid;
-		room.setRoomID(roomid);
 		lastHeartbeat = Timestamp.now();
 		lastActivity = Timestamp.now();
 		startTime = Timestamp.now();
@@ -104,7 +113,7 @@ public class Bot {
 				}
 				Message message = new Message(msg);
 				lastActivity = Timestamp.now();
-				debug("> " + message, 1);
+				debug("> " + message, RAW_DEBUG);
 				for (BotMessage bm : getMessages()) {
 					if (message.containsField("msgid")) {
 						if (bm.getMsgID() == message.getInt("msgid")) {
@@ -120,16 +129,36 @@ public class Bot {
 		return ws;
 	}
 
+	public final void setCommandStarts(char[] c) {
+		this.commandStarts = c;
+	}
+
+	public final CommandManager getCommandManager() {
+		return commandManager;
+	}
+
+	public final void setExternalPMs(boolean on) {
+		this.externalPMs = on;
+	}
+
 	public final void send(Message rq, MessageCallback callback) {
 		rq.append("msgid", msgid);
 		rq.append("clientid", clientid);
 		if (!rq.containsField("userid"))
 			rq.append("userid", userid);
 		rq.append("userauth", auth);
-		debug("< " + rq, 1);
+		debug("< " + rq, RAW_DEBUG);
 		ws.send("~m~" + rq.length() + "~m~" + rq);
 		requests.add(new BotMessage(msgid, rq, callback));
 		msgid++;
+	}
+
+	public final String[] trimArray(String[] o, int index) {
+		List<String> ox = new ArrayList<String>();
+		for (int i = index; i < o.length; i++) {
+			ox.add(o[i]);
+		}
+		return ox.toArray(new String[0]);
 	}
 
 	private final void onMessage(final Message msg) {
@@ -151,6 +180,14 @@ public class Bot {
 			case SPEAK:
 				stemp = msg.getString("text").trim();
 				user = getUsers().getByID(msg.getString("userid"));
+				if (isCommand(stemp)) {
+					String[] args = stemp.substring(1).split(" ");
+					if (commandManager.hasCommand(args[0])) {
+						Command c = commandManager.getCommand(args[0]);
+						if (c.canExecute(user))
+							c.execute(user, trimArray(args, 1), ChatType.MAIN);
+					}
+				}
 				eventManager.sendEvent(new ChatEvent(user, stemp, ChatType.MAIN));
 				break;
 			case UPDATE_ROOM:
@@ -204,15 +241,15 @@ public class Bot {
 				String field = uue.getField();
 				if (field.equals("fans")) {
 					String fan = getInt(uue.getValue()) > 0 ? "gained" : "lost";
-					debug(String.format("%s, has %s a fan!", user.getName(), fan), 0);
+					debug(String.format("%s, has %s a fan!", user.getName(), fan), DEFAULT_DEBUG);
 				} else if (field.equals("name")) {
 					String name = uue.getValue().toString();
-					debug(user.getName() + " changed their name to '" + name + "'", 0);
+					debug(user.getName() + " changed their name to '" + name + "'", DEFAULT_DEBUG);
 					user.setName(name);
 				} else if (field.equals("avatar")) {
 					int id = getInt(uue.getValue());
 					user.setAvatar(id);
-					debug(user.getName() + " changed their avatar to '" + id + "'.", 0);
+					debug(user.getName() + " changed their avatar to '" + id + "'.", DEFAULT_DEBUG);
 				}
 				eventManager.sendEvent(uue);
 				break;
@@ -241,11 +278,21 @@ public class Bot {
 			case PMMED:
 				String userid = msg.getString("senderid");
 				stemp = msg.getString("text").trim();
-				if (allowExternalPM && !getUsers().inRoom(userid)) {
+				if (externalPMs && !getUsers().inRoom(userid)) {
 					ExternalAPICallback callback = new ExternalAPICallback() {
 						public final void run(Message message, boolean success) {
-							if (success)
-								eventManager.sendEvent(new ChatEvent(new User(message), stemp, ChatType.PM));
+							if (success) {
+								User user = new User(message);
+								if (isCommand(stemp)) {
+									String[] args = stemp.substring(1).split(" ");
+									if (commandManager.hasCommand(args[0])) {
+										Command c = commandManager.getCommand(args[0]);
+										if (c.canExecute(user))
+											c.execute(user, (String[]) trimArray(args, 1), ChatType.PM);
+									}
+								}
+								eventManager.sendEvent(new ChatEvent(user, stemp, ChatType.PM));
+							}
 						}
 					};
 					External.getUserInfo(callback, userid);
@@ -253,26 +300,46 @@ public class Bot {
 					user = getUsers().getByID(userid);
 					if (user.getStatus() == Status.NO_PM) {
 						info(user.getName() + " is using an OS that does not support Private Messaging");
-					} else
+					} else {
+						if (isCommand(stemp)) {
+							String[] args = stemp.substring(1).split(" ");
+							if (commandManager.hasCommand(args[0])) {
+								Command c = commandManager.getCommand(args[0]);
+								if (c.canExecute(user))
+									c.execute(user, (String[]) trimArray(args, 1), ChatType.PM);
+							}
+						}
 						eventManager.sendEvent(new ChatEvent(user, stemp, ChatType.PM));
+					}
+
 				}
 				break;
 			case ROOM_CHANGED:
 				RoomChangeEvent rce = new RoomChangeEvent(msg);
-				RoomData data = rce.getRoomData();
-				getUsers().addUsers(data.getUsers());
-				if (data.getDjCount() > 0) {
-					for (String d : data.getDjs()) {
-						room.addDj(getUsers().getByID(d));
-					}
-				}
-				room.setCurrentSong(data.getSong());
+				room.setData(rce.getRoomData());
 				eventManager.sendEvent(rce);
 				break;
 			case OTHER:
-				debug(msg, 1);
+				debug(msg, 2); // TODO name this value
+				break;
+			default:
+				debug(msg, API_DEBUG);
 				break;
 		}
+	}
+
+	public boolean isCommand(String text) {
+		if (text.length() == 0)
+			return false;
+		for (char c : commandStarts) {
+			if (c == text.charAt(0))
+				return true;
+		}
+		return false;
+	}
+
+	public final boolean isEmpty(String text) {
+		return text.trim().equals("");
 	}
 
 	public final Timestamp getStartTime() {
@@ -312,7 +379,7 @@ public class Bot {
 		return fanOf;
 	}
 
-	private int getInt(Object value) {
+	public final int getInt(Object value) {
 		return Integer.parseInt(value.toString());
 	}
 
@@ -336,17 +403,17 @@ public class Bot {
 		return room;
 	}
 
-	private final String randHash(String al) {
-		return hash(Math.random(), al);
+	public final String format(String text, Object... o) {
+		return String.format(text, o);
 	}
 
-	private boolean hasWindow() {
+	public final boolean hasWindow() {
 		return window != null;
 	}
 
 	private void sendBeat(String line) {
 		ws.send("~m~" + line.length() + "~m~" + line);
-		debug("HeartBeat: " + ("~m~" + line.length() + "~m~" + line), 0);
+		debug("HeartBeat: " + ("~m~" + line.length() + "~m~" + line), DEFAULT_DEBUG);
 		msgid++;
 	}
 
@@ -413,13 +480,21 @@ public class Bot {
 		send(makeMessage(_rq), callback);
 	}
 
-	public final void modifyRoom(String descript) {
-		modifyRoom(descript, null);
+	public final void modifyRoom(String info) {
+		modifyRoom(info, null);
 	}
 
-	public final void modifyRoom(String descript, MessageCallback callback) {
-		Object[] _rq = { "api", "room.modify", "roomid", roomid, "description", descript };
+	public final void modifyRoom(String info, MessageCallback callback) {
+		Object[] _rq = { "api", "room.modify", "roomid", roomid, "description", info };
 		send(makeMessage(_rq), callback);
+	}
+
+	public void fan(User user) {
+		fan(user, null);
+	}
+
+	public void fan(User user, MessageCallback callback) {
+		fan(user.getID(), callback);
 	}
 
 	public final void fan(String userid) {
@@ -448,28 +523,31 @@ public class Bot {
 		roomInfo(roomid, new MessageCallback() {
 			public final void run(Message reply) {
 				onMessage(reply.append("command", "room.changed"));
-				new RepeatingTask(new Runnable() {
+				presenceTask = new RepeatingTask(new Runnable() {
 					public final void run() {
 						updatePresence();
 					}
-				}, 20000).start();
+				}, 20000);
+				presenceTask.start();
 				getPlaylist(new MessageCallback() {
 					public final void run(Message reply) {
-						debug("Loading Playlist", 0);
+						debug("Loading Playlist", DEFAULT_DEBUG);
 						for (Message song : reply.getMessageList("list")) {
 							playlist.add(new Song(song, true));
 						}
-						debug("Loaded " + playlist.size() + " songs.", 0);
+						debug("Loaded " + playlist.size() + " songs.", DEFAULT_DEBUG);
 						getFanList(new MessageCallback() {
 							public final void run(Message reply) {
-								debug("Loading fan list.", 0);
+								debug("Loading fan list", DEFAULT_DEBUG);
 								for (String userid : reply.getStringList("fanof")) {
 									if (!fanOf.contains(userid))
 										fanOf.add(userid);
 								}
-								debug("Loaded " + fanOf.size() + " fans.", 0);
+								debug("Loaded " + fanOf.size() + " fans.", DEFAULT_DEBUG);
+								Bot.this.loaded = true;
 							}
 						});
+
 					}
 				});
 			}
@@ -514,10 +592,6 @@ public class Bot {
 	public final void favorite(String roomid, MessageCallback callback) {
 		Object[] _rq = { "api", "room.add_favorite", "roomid", roomid };
 		send(makeMessage(_rq), callback);
-	}
-
-	public final void getBuddies() {
-		getBuddies(null);
 	}
 
 	public final void getBuddies(MessageCallback callback) {
@@ -573,8 +647,14 @@ public class Bot {
 		send(makeMessage(_rq), callback);
 	}
 
-	public final void getGraph(MessageCallback callback) {
-		// TODO
+	public final void getGraph(final DirectoryGraphCallback callback) {
+		MessageCallback cb = new MessageCallback() {
+			public void run(Message message) {
+				callback.run(new DirectoryGraph(message));
+			}
+		};
+		Object[] rq = { "api", "room.directory_graph" };
+		send(makeMessage(rq), callback == null ? null : cb);
 	}
 
 	public final void getPurchasedStickers(MessageCallback callback) {
@@ -636,18 +716,6 @@ public class Bot {
 		send(makeMessage(_rq), callback);
 	}
 
-	public final void snag() {
-		snag(false);
-	}
-
-	public final void snag(boolean addSong) {
-		snag(addSong, null);
-	}
-
-	public final void snag(MessageCallback callback) {
-		snag(false, callback);
-	}
-
 	public final void snag(boolean add, MessageCallback callback) {
 		Song song = getCurrentSong();
 		String sh = randHash("sha1"), i = String.format("%s/%s/%s/%s/%s/%s/%s/%s", userid, song.getUserID(), song.getID(), roomid, "queue",
@@ -678,31 +746,34 @@ public class Bot {
 		addSong(null);
 	}
 
-	public final void addSong(String songid) {
-		addSong(songid, null);
+	public final void addSong(String id) {
+		addSong(id, null);
 	}
 
-	public final void addSong(String songid, MessageCallback callback) {
-		Object[] _rq = { "api", "playlist.add", "playlist_name", "default", "song_dict", new BasicDBObject().append("fileid", songid),
-				"index", playlist.size() };
+	public final void addSong(String id, MessageCallback callback) {
+		addSong(id, playlist.size(), "default", callback);
+	}
+
+	public final void addSong(String id, int idx, String playlist, MessageCallback callback) {
+		Object[] _rq = { "api", "playlist.add", "playlist_name", playlist, "song_dict", new Message().append("fileid", id), "index", idx };
 		send(makeMessage(_rq), callback);
 	}
 
-	public final void removeSong() {
-		removeSong(null);
+	public final void delSong() {
+		delSong(null);
 	}
 
-	public final void removeSong(MessageCallback callback) {
-		removeSong(0, callback);
+	public final void delSong(MessageCallback callback) {
+		delSong(0, callback);
 	}
 
-	public final void removeSong(int index, MessageCallback callback) {
-		Object[] _rq = { "api", "playlist.remove", "playlist_name", "default", "index", index };
+	public final void delSong(int idx, MessageCallback callback) {
+		delSong(idx, "default", callback);
+	}
+
+	public final void delSong(int idx, String playlist, MessageCallback callback) {
+		Object[] _rq = { "api", "playlist.remove", "playlist_name", playlist, "index", idx };
 		send(makeMessage(_rq), callback);
-	}
-
-	public final void userInfo() {
-		userInfo(null);
 	}
 
 	public final void userInfo(MessageCallback callback) {
@@ -718,21 +789,12 @@ public class Bot {
 		Object[] _rq = { "api", "user.modify_profile", "name", profile.getName(), "twitter", profile.getTwitter(), "facebook",
 				profile.getFacebook(), "website", profile.getWebsite(), "about", profile.getAbout(), "topartists", profile.getTopartists(),
 				"hangout", profile.getHangout() };
-
 		send(makeMessage(_rq), callback);
-	}
-
-	public final void getFanList() {
-		getFanList(null);
 	}
 
 	public final void getFanList(MessageCallback callback) {
 		Object[] _rq = { "api", "user.get_fan_of" };
 		send(makeMessage(_rq), callback);
-	}
-
-	public final void getProfile() {
-		getProfile(null);
 	}
 
 	public final void getProfile(MessageCallback callback) {
@@ -776,8 +838,28 @@ public class Bot {
 		self.setStatus(status);
 	}
 
-	public final void playlistToTop(int index) {
-		playlistReorder(index, 0);
+	public final void playlistToTop(int idx) {
+		playlistToTop(idx, null);
+	}
+
+	public final void playlistToTop(int idx, MessageCallback callback) {
+		playlistReorder(idx, 0, callback);
+	}
+
+	public final void playlistToTop(String playlist, int idx, MessageCallback callback) {
+		playlistReorder(playlist, idx, 0, callback);
+	}
+
+	public final void playlistToBottom(int idx) {
+		playlistToBottom(idx, null);
+	}
+
+	public final void playlistToBottom(int idx, MessageCallback callback) {
+		playlistToBottom("default", idx, callback);
+	}
+
+	public final void playlistToBottom(String playlist, int idx, MessageCallback callback) {
+		playlistReorder(playlist, idx, this.playlist.size(), callback);
 	}
 
 	public final void unFan(String userid) {
@@ -789,17 +871,17 @@ public class Bot {
 		send(makeMessage(_rq), callback);
 	}
 
-	public final void playlistReorder(int iF, int iT) {
-		playlistReorder(iF, iT, null);
+	public final void playlistReorder(int idxFrom, int idxTo) {
+		playlistReorder(idxFrom, idxTo, null);
 	}
 
-	public final void playlistReorder(int iF, int iT, MessageCallback callback) {
-		Object[] _rq = { "api", "playlist.reorder", "playlist_name", "default", "index_from", iF, "index_to", iT };
+	public final void playlistReorder(int idxFrom, int idxTo, MessageCallback callback) {
+		playlistReorder("default", idxFrom, idxTo, callback);
+	}
+
+	public final void playlistReorder(String playlist, int idxFrom, int idxTo, MessageCallback callback) {
+		Object[] _rq = { "api", "playlist.reorder", "playlist_name", playlist, "index_from", idxFrom, "index_to", idxTo };
 		send(makeMessage(_rq), callback);
-	}
-
-	public final void listRooms(int skip) {
-		listRooms(skip, null);
 	}
 
 	public final void listRooms(int skip, MessageCallback callback) {
@@ -816,23 +898,24 @@ public class Bot {
 	}
 
 	public final void authUser() {
-		authUser(null);
-	}
-
-	public final void authUser(MessageCallback callback) {
-		Object[] _rq = { "api", "user.authenticate", "roomid", roomid };
-		send(makeMessage(_rq), callback);
-		joinRoom(roomid, new MessageCallback() {
-			public final void run(Message reply) {
+		authUser(new MessageCallback() {
+			public void run(Message reply) {
 				if (reply.getBoolean("success")) {
-					roomInfo();
+					joinRoom(roomid, new MessageCallback() {
+						public final void run(Message reply) {
+							if (reply.getBoolean("success")) {
+								roomInfo();
+							}
+						}
+					});
 				}
 			}
 		});
 	}
 
-	public final void getPlaylist() {
-		getPlaylist("default", null);
+	public final void authUser(MessageCallback callback) {
+		Object[] _rq = { "api", "user.authenticate", "roomid", roomid };
+		send(makeMessage(_rq), callback);
 	}
 
 	public final void getPlaylist(MessageCallback callback) {
@@ -842,19 +925,6 @@ public class Bot {
 	public final void getPlaylist(String name, MessageCallback callback) {
 		Object[] _rq = { "api", "playlist.all", "playlist_name", name };
 		send(makeMessage(_rq), callback);
-	}
-
-	private String hash(Object o, String al) {
-		StringBuilder key = new StringBuilder();
-		try {
-			MessageDigest md = MessageDigest.getInstance(al);
-			md.update(String.valueOf(o).getBytes());
-			for (byte b : md.digest()) {
-				key.append(Integer.toHexString((0xff & b) | 0xffffff00).substring(6));
-			}
-		} catch (Exception ex) {
-		}
-		return key.toString();
 	}
 
 	public final Message makeMessage(Object... o) {
@@ -881,13 +951,29 @@ public class Bot {
 		this.window = window;
 	}
 
+	public final RepeatingTask getPresenceTask() {
+		return presenceTask;
+	}
+
 	public final void close() {
+		if (presenceTask != null && presenceTask.isRunning()) {
+			presenceTask.quit();
+		}
 		ws.close();
+		closed = true;
+		if (hasWindow()) {
+			window.close();
+		}
+
+	}
+
+	public final boolean isClosed() {
+		return closed;
 	}
 
 	// Logging
 	public final void setDebug(boolean debug) {
-		setDebug(debug, 0);
+		setDebug(debug, DEFAULT_DEBUG);
 	}
 
 	public final void setDebug(boolean debug, int level) {
@@ -904,7 +990,12 @@ public class Bot {
 	}
 
 	public final void debug(Object data, int level) {
-		if (debug && level >= debugLevel)
+		if ((debugLevel & STRICT) != 0) {
+			if (level == (debugLevel ^ STRICT))
+				log(LogLevel.DEBUG, data.toString());
+			return;
+		}
+		if (debug && (level <= debugLevel))
 			log(LogLevel.DEBUG, data.toString());
 	}
 
@@ -915,4 +1006,7 @@ public class Bot {
 			window.log(level, data);
 	}
 
+	public boolean isLoaded() {
+		return loaded;
+	}
 }

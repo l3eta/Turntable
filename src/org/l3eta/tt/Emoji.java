@@ -13,8 +13,7 @@ public final class Emoji {
 	}
 
 	public enum HeartColor {
-		RED("heart"), BLUE("blue_heart"), PURPLE("purple_heart"), YELLOW(
-				"yellow_heart"), GREEN("green_heart");
+		RED("heart"), BLUE("blue_heart"), PURPLE("purple_heart"), YELLOW("yellow_heart"), GREEN("green_heart");
 
 		private String ico;
 

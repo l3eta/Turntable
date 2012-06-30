@@ -1,4 +1,4 @@
-package org.l3eta.tt.util;
+package org.l3eta.util;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;

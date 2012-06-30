@@ -1,11 +1,8 @@
 package org.l3eta.tt.images;
 
 import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.HashMap;
 
-import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
@@ -29,7 +26,7 @@ public class ImageLoader {
 
 	private static String loadImage(String name) {
 		return ImageLoader.class.getResource(name).toExternalForm();
-
+ 
 	}
 
 	public static Icon getIcon(String name) {

@@ -1,19 +1,12 @@
 package org.l3eta.gui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Window;
-
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
-import com.sun.awt.AWTUtilities;
-import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -21,8 +14,15 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 
-//TODO make this match components
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import com.sun.awt.AWTUtilities;
+
+//TODO make this match components | remove it.
 public abstract class Overlay extends JDialog {
+	private static final long serialVersionUID = -3150682958750551572L;
 	private int width;
 	private Color shadow = new Color(0, 0, 0, 150);
 	private Color trans = new Color(0, 0, 0, 0);

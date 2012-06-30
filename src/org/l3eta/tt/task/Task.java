@@ -23,9 +23,15 @@ public class Task extends Thread {
 		return running;
 	}
 	
+	public void quit() {
+		running = false;
+	}
+	
 	public void start() {
-		running = true;
-		super.start();
+		if(!running) {
+			running = true;
+			super.start();
+		}		
 	}
 
 	public long getWait() {

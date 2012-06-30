@@ -10,8 +10,7 @@ import org.l3eta.tt.Enums.ListenerPriority;
 import org.l3eta.tt.event.Event;
 import org.l3eta.tt.event.Event.Listener;
 import org.l3eta.tt.event.EventListener;
-
-import org.l3eta.tt.util.Reflect;
+import org.l3eta.util.Reflect;
 
 public class EventManager {
 	private Map<ListenerPriority, List<ListenerData>> ls;
@@ -23,7 +22,13 @@ public class EventManager {
 		}
 	}
 
-	public void registerListener(EventListener el) {
+	public void addListeners(EventListener... list) {
+		for (EventListener el : list) {
+			addListener(el);
+		}
+	}
+
+	public void addListener(EventListener el) {
 		ListenerData data = new ListenerData(el);
 		ls.get(data.getPriority()).add(data);
 	}
@@ -53,7 +58,8 @@ public class EventManager {
 		}
 
 		public ListenerPriority getPriority() {
-			return listener.getClass().getAnnotation(Listener.class).priority();
+			Listener i = listener.getClass().getAnnotation(Listener.class);
+			return i == null ? ListenerPriority.NORMAL : i.priority();
 		}
 
 		private void addEvent(Class<?> c) {
