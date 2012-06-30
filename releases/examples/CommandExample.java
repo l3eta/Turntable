@@ -1,39 +1,42 @@
 import org.l3eta.tt.Bot;
-import org.l3eta.tt.event.ChatEvent;
+import org.l3eta.tt.Enums.Vote;
+import org.l3eta.tt.User;
+import org.l3eta.tt.command.Command;
+import org.l3eta.tt.event.ChatEvent.ChatType;
 import org.l3eta.tt.event.EventListener;
-import org.l3eta.tt.event.Event.EventMethod;
+import org.l3eta.tt.manager.CommandManager;
 
-public class CommandExample extends Bot {
+public class CommandExample extends EventListener {
 
-	public static void main(String[] args) {
-		new CommandExample();
+	public CommandExample(Bot bot) {
+		super(bot);
+		CommandManager cm = bot.getCommandManager();
+		cm.addCommand(new Hello("hello"));
+		cm.addCommand(new Dance("dance"));
 	}
 
-	public CommandExample() {
-		super("auth", "userid", "roomid");
-		getEventManager().registerListener(new CommandEventHandler(this));
+	public class Dance extends Command {
 
+		public Dance(String name) {
+			super(name);
+		}
+
+		@Override
+		public void execute(User user, String[] args, ChatType type) {
+			bot.doAction("dances");
+			bot.vote(Vote.UP);
+		}
 	}
 
-	public class CommandEventHandler extends EventListener {
+	public class Hello extends Command {
 
-		public CommandEventHandler(Bot bot) {
-			super(bot);
+		public Hello(String name) {
+			super(name);
 		}
 
-		@EventMethod
-		public void speak(ChatEvent event) {
-			String text = event.getText();
-			if (text.startsWith("/")) {
-				String[] args = text.substring(1).split(" ");
-				String cmd = args[0].toLowerCase();
-				// Lower case it because you have no use for upper case
-				// commands.
-				if (cmd.equals("hello") || cmd.equals("hi")) {
-					getBot().speak(String.format("Hi %s!", event.getUser()));
-				}
-			}
+		@Override
+		public void execute(User user, String[] args, ChatType type) {
+			bot.speak(String.format("Hello %s!", user.getName()));
 		}
-
 	}
 }
