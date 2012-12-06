@@ -1,6 +1,7 @@
 package org.l3eta.tt.db;
 
 import org.l3eta.tt.User;
+import org.l3eta.tt.user.Rank;
 import org.l3eta.tt.util.Message;
 
 public interface Database {
@@ -20,4 +21,10 @@ public interface Database {
 	public boolean hasSetting(String setting);
 	
 	public String getName();
+	
+	//Predefined code savers
+	
+	public Message[] getBannedUsers();
+	
+	public Rank getUserRank(String userid);
 }

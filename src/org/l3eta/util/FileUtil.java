@@ -14,7 +14,7 @@ public class FileUtil {
 			BufferedReader r = new BufferedReader(new FileReader(file));
 			String l;			
 			while ((l = r.readLine()) != null) {
-				data += " " + l;
+				data += " " + l; //Probably should just use "\n" + l and do a split("\n") You could do \r\n but eh
 			}
 		} catch(Exception ex) {
 			ex.printStackTrace();

@@ -19,8 +19,6 @@ import org.l3eta.tt.task.RepeatingTask;
 import org.l3eta.tt.util.DirectoryGraph;
 import org.l3eta.tt.util.DirectoryGraph.DirectoryGraphCallback;
 
-import _ignore.gui.BuddyPanel;
-
 public class PrivateMessaging extends JPanel {
 	private static final long serialVersionUID = -6390956194578846693L;
 	private Map<String, BuddyPanel> buddies;
@@ -54,7 +52,7 @@ public class PrivateMessaging extends JPanel {
 		scrollPane.setViewportView(friends);
 		friendsLayout = new GeneratedLayout(friends);
 		setLayout(groupLayout);
-		// awaitBotLoad(); //TODO put this after debugging is done
+		awaitBotLoad(); //TODO put this after debugging is done
 	}
 
 	public void awaitBotLoad() {
@@ -81,7 +79,7 @@ public class PrivateMessaging extends JPanel {
 						for(RoomData room : graph.getRooms()) {
 							String room_name = room.getName();
 							for(User user : room.getUsers()) {
-								
+								//This is slightly done all that is needed is to have it add to the user list
 							}
 						}
 					}
@@ -98,7 +96,7 @@ public class PrivateMessaging extends JPanel {
 	public void add() {
 		User user = new User();
 		user.setName("01234567890123456789");
-		user.setStatus(Status.AVAILABLE);
+		user.setStatus(Status.AVAILABLE); //This is testing so make sure it worked.
 		for (int i = 0; i < 101; i++) {
 			friendsLayout.addSingle(new BuddyPanel(user), 170, 39);
 		}

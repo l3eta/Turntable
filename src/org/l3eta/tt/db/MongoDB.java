@@ -29,11 +29,15 @@ public class MongoDB implements Database {
 			e.printStackTrace();
 		}
 	}
+	
+	@Override
+	public Message[] getBannedUsers() {
+		return null; //Something like getSetting("bannedUsers").getMessageList(
+	}
 
 	@Override
 	public void saveUser(User user) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -129,5 +133,11 @@ public class MongoDB implements Database {
 		private boolean isNull(Object o) {
 			return o == null;
 		}
+	}
+
+	@Override
+	public Rank getUserRank(String userid) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

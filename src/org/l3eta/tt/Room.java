@@ -11,8 +11,8 @@ import com.mongodb.BasicDBList;
 
 public final class Room {
 	public Users users;
-	private List<User> userList, djs;
-	private Map<String, String> banList;
+	private HashMap<String, User> userList;
+	private List<User> djs;
 	private Bot bot;
 	private Song currentSong;
 	private String id;
@@ -21,9 +21,8 @@ public final class Room {
 	public Room(Bot bot) {
 		this.bot = bot;
 		users = new Users();
-		userList = new ArrayList<User>();
+		userList = new HashMap<String, User>();
 		djs = new ArrayList<User>();
-		banList = new HashMap<String, String>();
 	}
 
 	public void setData(RoomData data) {
@@ -58,7 +57,7 @@ public final class Room {
 		djs.remove(user);
 		user.setDj(false);
 	}
-
+	
 	/**
 	 * @return Room Name
 	 */
@@ -82,7 +81,7 @@ public final class Room {
 		 * @return Array of Users
 		 */
 		public User[] getList() {
-			return userList.toArray(new User[0]);
+			return userList.values().toArray(new User[0]);
 		}
 
 		/**
@@ -92,9 +91,11 @@ public final class Room {
 		 *            The User to add.
 		 */
 		public void addUser(User user) {
-			if (userList.contains(user))
+			String id = user.getID();
+			if (userList.containsKey(id))
 				return;
-			userList.add(user);
+			userList.put(id, user);
+			bot.getDatabase().getUserRank(id);
 		}
 
 		/**
@@ -104,8 +105,8 @@ public final class Room {
 		 *            User to remove.
 		 */
 		public void removeUser(User user) {
-			if (userList.contains(user)) {
-				userList.remove(getIndex(user));
+			if (userList.containsKey(user.getID())) {
+				userList.remove(user.getID());
 			}
 		}
 
@@ -117,15 +118,15 @@ public final class Room {
 		 * @return The User
 		 */
 		public User getByName(String name) {
-			User user = null;
-			for (int i = 0; i < userList.size(); i++) {
-				if (name.equals(userList.get(i).getName()))
-					user = userList.get(i);
+			for(String key : userList.keySet()) {
+				User user = userList.get(key);
+				if(user != null && user.getName().equals(name)) {
+					return user;
+				}				
 			}
-			if (name.startsWith("@") && user == null) {
-				user = getByName(name.substring(1));
-			}
-			return user;
+			if (name.startsWith("@"))
+				return getByName(name.substring(1));
+			return null;
 		}
 
 		/**
@@ -136,7 +137,6 @@ public final class Room {
 		 * @return The User
 		 */
 		public User getByID(Message message) {
-
 			try {
 				return getByID(message.getString("userid"));
 			} catch (Exception ex) {
@@ -170,39 +170,6 @@ public final class Room {
 			return getByID(userid) != null;
 		}
 
-		/**
-		 * Gets the index of the user in the UserList Array.
-		 * 
-		 * @param user
-		 *            User to find.
-		 * @return Index of the user.
-		 */
-		public int getIndex(User user) {
-			return userList.indexOf(user);
-		}
-
-		// Banning
-		public String getBanReason(User user) {
-			return banList.get(user.getID());
-		}
-
-		public boolean isBanned(User user) {
-			return isBanned(user.getID());
-		}
-
-		public boolean isBanned(String userid) {
-			return banList.containsKey(userid);
-		}
-
-		public void ban(User user, String reason) {
-			// TODO
-		}
-
-		public void ban(String userid, String reason) {
-			banList.put(userid, reason);
-			bot.boot(userid, reason);
-		}
-
 		public void addUsers(BasicDBList list) {
 			addUsers(list.toArray(new User[0]));
 		}
@@ -211,16 +178,6 @@ public final class Room {
 			for (User user : users) {
 				addUser(user);
 			}
-		}
-
-		public void unban(User user) {
-			if (user == null)
-				return;
-			unban(user.getID());
-		}
-
-		public void unban(String id) {
-			banList.remove(id);
 		}
 	}
 

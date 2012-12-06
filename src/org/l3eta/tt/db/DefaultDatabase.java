@@ -3,6 +3,7 @@ package org.l3eta.tt.db;
 import java.io.File;
 
 import org.l3eta.tt.User;
+import org.l3eta.tt.user.Rank;
 import org.l3eta.tt.util.Message;
 import org.l3eta.util.FileUtil;
 
@@ -29,6 +30,10 @@ public class DefaultDatabase implements Database {
 
 	public void saveUser(User user) {
 		FileUtil.writeTo(new File(dbUsers, user.getID() + ".sav"), user.toString());
+	}
+	
+	public Message[] getBannedUsers() {
+		return new Message[] { };
 	}
 
 	public void saveUsers(User[] users) {
@@ -60,5 +65,11 @@ public class DefaultDatabase implements Database {
 
 	public String getName() {
 		return database;
+	}
+
+	@Override
+	public Rank getUserRank(String userid) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
