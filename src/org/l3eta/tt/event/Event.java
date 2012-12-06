@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.l3eta.tt.Enums.ListenerPriority;
-import org.l3eta.tt.util.Timestamp;
+import org.l3eta.util.Timestamp;
 
 public class Event {
 	private boolean cancelled;

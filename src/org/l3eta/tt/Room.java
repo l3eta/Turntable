@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.l3eta.tt.task.DelayedTask;
-import org.l3eta.tt.user.Rank;
 import org.l3eta.tt.util.Message;
 
 import com.mongodb.BasicDBList;
@@ -17,9 +15,8 @@ public final class Room {
 	private Map<String, String> banList;
 	private Bot bot;
 	private Song currentSong;
-	private boolean locked = false;
 	private String id;
-	private String name = "room.name", lockmessage = "lock.message";
+	private String name = "room.name";
 
 	public Room(Bot bot) {
 		this.bot = bot;
@@ -37,36 +34,6 @@ public final class Room {
 			}
 		}
 		setCurrentSong(data.getSong());
-	}
-
-	public void lockRoom(String message) {
-		bot.debug("Locking room.", 0);
-		lockmessage = message;
-		locked = true;
-		bot.debug("Locking complete. Remove users.", 0);
-		removeUsers();
-	}
-
-	public void removeUsers() {
-		new Thread() {
-			public void run() {
-				for (final User user : users.getList()) {
-					// TODO make a shouldBoot(User);
-					if (!Rank.ADMIN.compare(user.getRank()) && !user.equals(bot.getSelf()) && user.getAccessLevel() == 0) {
-						new DelayedTask(new Runnable() {
-							public void run() {
-								bot.boot(user, lockmessage);
-							}
-						}, 500).start();
-					}
-				}
-				bot.debug("Locking completed & users removed.", 0);
-			}
-		}.start();
-	}
-
-	public void unlockRoom() {
-		this.locked = false;
 	}
 
 	protected void setName(String name) {
@@ -124,20 +91,9 @@ public final class Room {
 		 * @param user
 		 *            The User to add.
 		 */
-		public void addUser(final User user) {
+		public void addUser(User user) {
 			if (userList.contains(user))
 				return;
-			user.setRank(bot.getDatabase().getUserRank(user));
-			if (locked) {
-				if (!Rank.ADMIN.compare(user.getRank()) && user.getAccessLevel() == 0)
-					new DelayedTask(new Runnable() {
-						public void run() {
-							bot.speak("@" + user.getName() + ", You will be booted in 30 seconds, The room is currently locked..");
-							bot.boot(user, lockmessage);
-						}
-					}, 30000).start();
-				return;
-			}
 			userList.add(user);
 		}
 
@@ -151,7 +107,6 @@ public final class Room {
 			if (userList.contains(user)) {
 				userList.remove(getIndex(user));
 			}
-			// Tried to remove a user that was never added to list
 		}
 
 		/**
@@ -170,7 +125,7 @@ public final class Room {
 			if (name.startsWith("@") && user == null) {
 				user = getByName(name.substring(1));
 			}
-			return user.isNull() ? new User() : user;
+			return user;
 		}
 
 		/**
@@ -181,6 +136,7 @@ public final class Room {
 		 * @return The User
 		 */
 		public User getByID(Message message) {
+
 			try {
 				return getByID(message.getString("userid"));
 			} catch (Exception ex) {
@@ -200,11 +156,18 @@ public final class Room {
 				if (userid.equals(userList.get(i).getID()))
 					return userList.get(i);
 			}
-			return new User();
+			return null;
 		}
 
+		/**
+		 * Checks if a user is in the room.
+		 * 
+		 * @param userid
+		 *            ID of the user to find
+		 * @return if in the room returns true, Otherwise false
+		 */
 		public boolean inRoom(String userid) {
-			return !getByID(userid).isNull();
+			return getByID(userid) != null;
 		}
 
 		/**
@@ -232,9 +195,7 @@ public final class Room {
 		}
 
 		public void ban(User user, String reason) {
-			if (user.isNull())
-				return;
-
+			// TODO
 		}
 
 		public void ban(String userid, String reason) {
@@ -253,7 +214,7 @@ public final class Room {
 		}
 
 		public void unban(User user) {
-			if (user.isNull())
+			if (user == null)
 				return;
 			unban(user.getID());
 		}
@@ -322,7 +283,8 @@ public final class Room {
 					downvotes = to.getInt("downvotes");
 					privacy = to.getString("privacy");
 					upvotes = to.getInt("upvotes");
-					pointLimit = to.getInt("djthreshold");
+					if (to.has("djthreshold"))
+						pointLimit = to.getInt("djthreshold");
 					mods = to.getStringList("moderator_id");
 					djs = to.getStringList("djs");
 					maxDjs = to.getInt("max_djs");
@@ -336,13 +298,8 @@ public final class Room {
 
 				}
 			} else {
-				Message to;
-				BasicDBList tl;
-				for (Message user : json.getMessageList("users")) {
-					users.add(new User(user));
-				}
-				to = new Message(json.get("room"));
-				tl = to.getList("chatserver");
+				Message to = new Message(json.get("room"));
+				BasicDBList tl = to.getList("chatserver");
 				chatServer = tl.get(0).toString();
 				chatPort = Integer.parseInt(tl.get(1).toString());
 
@@ -352,7 +309,6 @@ public final class Room {
 				roomid = to.getString("roomid");
 				created = to.getDouble("created");
 				to = to.getSubObject("metadata");
-				creator = new User(to.getSubObject("creator"));
 				try {
 					song = new Song(to.getSubObject("current_song"), false);
 				} catch (Exception ex) {
@@ -362,7 +318,8 @@ public final class Room {
 				downvotes = to.getInt("downvotes");
 				privacy = to.getString("privacy");
 				upvotes = to.getInt("upvotes");
-				pointLimit = to.getInt("djthreshold");
+				if (to.has("djthreshold"))
+					pointLimit = to.getInt("djthreshold");
 				mods = to.getStringList("moderator_id");
 				djs = to.getStringList("djs");
 				maxDjs = to.getInt("max_djs");
@@ -373,11 +330,20 @@ public final class Room {
 				// votelog = temp.get("votelog");
 				// stickerPlacements = temp.get("sticker_placements");
 				// songlog = temp.get("songlog");
+				for (Message user : json.getMessageList("users")) {
+					User u = new User(user);
+					users.add(u);
+				}
 
 			}
 
 		}
 
+		/**
+		 * Returns a list of Moderators in the room
+		 * 
+		 * @return List of Moderators
+		 */
 		public String[] getMods() {
 			return mods;
 		}

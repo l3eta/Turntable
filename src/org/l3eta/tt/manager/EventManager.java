@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.l3eta.tt.Bot;
 import org.l3eta.tt.Enums.ListenerPriority;
 import org.l3eta.tt.event.Event;
 import org.l3eta.tt.event.Event.Listener;
@@ -14,8 +15,10 @@ import org.l3eta.util.Reflect;
 
 public class EventManager {
 	private Map<ListenerPriority, List<ListenerData>> ls;
-
-	public EventManager() {
+	private final Bot bot;
+	
+	public EventManager(Bot bot) {
+		this.bot = bot;
 		ls = new HashMap<ListenerPriority, List<ListenerData>>();
 		for (ListenerPriority e : ListenerPriority.values()) {
 			ls.put(e, new ArrayList<ListenerData>());
@@ -31,6 +34,7 @@ public class EventManager {
 	public void addListener(EventListener el) {
 		ListenerData data = new ListenerData(el);
 		ls.get(data.getPriority()).add(data);
+		el.setBot(bot);
 	}
 
 	public void sendEvent(Event event) {
@@ -85,5 +89,5 @@ public class EventManager {
 				e.printStackTrace();
 			}
 		}
-	}
+	}	
 }

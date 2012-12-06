@@ -1,3 +1,4 @@
-Hi this is a readme.
+TODO actually create this into a read me.
 
-All you need is java to work this, And a basic understanding of java.
+Trello Page: https://trello.com/board/turntable-bot-api/4feffc201477d49048562c1b
+

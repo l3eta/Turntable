@@ -1,15 +1,15 @@
 package org.l3eta.tt.manager;
 
-import javax.swing.JPanel;
+import java.io.InputStream;
+import java.net.URL;
+
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import org.l3eta.tt.Bot;
 import org.l3eta.tt.Enums.LogLevel;
-
-import java.io.InputStream;
-import java.net.URL;
 
 public class BotWindow extends JPanel {
 	private static final long serialVersionUID = 4857881216782181279L;

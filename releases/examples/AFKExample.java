@@ -2,7 +2,6 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import org.l3eta.tt.Bot;
 import org.l3eta.tt.User;
 import org.l3eta.tt.event.ChatEvent;
 import org.l3eta.tt.event.ChatEvent.ChatType;
@@ -19,8 +18,8 @@ public class AFKExample extends EventListener{
 	private final int checkerWait = 60; //Time in seconds
 	private RepeatingTask checker;
 	//TODO update this.
-	public AFKExample(Bot bot) {
-		super(bot);
+	
+	public AFKExample() {
 	}
 	
 	@EventMethod

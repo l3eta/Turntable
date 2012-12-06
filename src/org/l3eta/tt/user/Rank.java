@@ -13,8 +13,9 @@ public class Rank {
 
 	private int rank;
 	private String name;
-
+	
 	private Rank(String name, int rank) {
+		this.name = name;
 		this.rank = rank;
 	}
 
@@ -56,5 +57,9 @@ public class Rank {
 		Rank r = new Rank(name, rank);
 		ranks.put(name, r);
 		return r;
+	}
+	
+	public String toString() {
+		return this.name;
 	}
 }

@@ -1,23 +1,23 @@
 package org.l3eta.tt.db;
 
 import org.l3eta.tt.User;
-import org.l3eta.tt.user.Rank;
 import org.l3eta.tt.util.Message;
 
-public abstract class Database {
-	
-	public Database(String dbName) {
-	}
+public interface Database {
 
-	public abstract Rank getUserRank(User user);
+	// User functions
+	public void saveUser(User user);
 
-	public abstract void saveUser(User user);
+	public void saveUsers(User[] users);
+
+	public User loadUser(String userid);
+
+	// Settings
+	public void putSetting(String setting, Message map);
+
+	public Message getSetting(String setting);
 	
-	public abstract void saveUsers(User[] users);
+	public boolean hasSetting(String setting);
 	
-	public abstract User getUser(String userid);
-	
-	public abstract void putSettings(String col, Message map);
-	
-	public abstract Message getSettings(String col);
+	public String getName();
 }

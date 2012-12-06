@@ -1,4 +1,3 @@
-import org.l3eta.tt.Bot;
 import org.l3eta.tt.User;
 import org.l3eta.tt.command.Command;
 import org.l3eta.tt.event.ChatEvent.ChatType;
@@ -12,9 +11,11 @@ import org.l3eta.util.StringUtil;
 public class BlackListExample extends EventListener {
 	private Rank banRank = Rank.ADMIN;
 
-	public BlackListExample(Bot bot) {
-		super(bot);
-		// TODO make a loading factor for databases
+	public BlackListExample() {
+	}
+	
+	public void loaded() {
+		//TODO add in db
 	}
 
 	@EventMethod

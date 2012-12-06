@@ -7,12 +7,12 @@ import org.l3eta.tt.Enums.Laptop;
 import org.l3eta.tt.Enums.Status;
 import org.l3eta.tt.user.Rank;
 import org.l3eta.tt.util.Message;
-import org.l3eta.tt.util.Timestamp;
+import org.l3eta.util.Timestamp;
 
 public class User {
 	private String name, id;
 	private double points, fans, avatar, acl, created;
-	private boolean isDj, isNull;
+	private boolean isDj, isRemote;
 	private Rank rank;
 	private Status status;
 	private Laptop laptop;
@@ -20,12 +20,15 @@ public class User {
 	private Timestamp activity;
 	private Map<String, Object> attachments;
 
-	public User() {
-		isNull = true;
+	public User() {		
+	}
+	
+	public User(Message json) {
+		this(false, json);
 	}
 
-	public User(Message json) {
-		attachments = new HashMap<String, Object>();
+	public User(boolean isRemote, Message json) {
+		this.isRemote = isRemote;
 		name = json.getString("name");
 		laptop = Laptop.get(json.getString("laptop"));
 		id = json.getString("userid");
@@ -37,88 +40,97 @@ public class User {
 		rank = Rank.USER;
 		activity = Timestamp.now();
 		isDj = false;
-		if(json.has("status")) {
+		if (json.has("status")) {
 			status = Status.get(json.getString("status"));
 		} else {
 			status = laptop.isPhone() ? Status.NO_PM : Status.AVAILABLE;
-				
-		}		
-	}
-
-	public Message toDBObject() {
-		Message user = new Message();		
-		user.put("name", name);
-		user.put("laptop", laptop.name());
-		user.put("userid", id);
-		user.put("points", points);
-		user.put("fans", fans);
-		user.put("avatar", avatar);
-		user.put("status", status.name());
-		user.put("created", created);
-		user.put("acl", acl);
-		user.put("rank", rank);		
-		return user;
+		}
+		if(!isRemote)
+		attachments = new HashMap<String, Object>();
 	}
 
 	private double getAvatar(Object o) {
 		return Double.parseDouble(String.valueOf(o).replace("\"", ""));
 	}
 
-	public void save() {
-		if (room != null)
-			room.saveUser(this);
-	}
-
-	public int getAccessLevel() {
-		return (int) acl;
-	}
-
-	public void updateActivity() {
-		activity = Timestamp.now();
-	}
-	
-	public double getCreated() {
-		return created;
-	}
-
-	public boolean isDj() {
-		return this.isDj;
-	}
-
-	public void setDj(boolean isDj) {
-		this.isDj = isDj;
-	}
-
-	public Timestamp getActivity() {
-		return this.activity;
-	}
-
-	public boolean isNull() {
-		return isNull;
+	public String getName() {
+		return name;
 	}
 
 	public String getID() {
 		return id;
 	}
 
-	public String getName() {
-		return name;
+	public double getPoints() {
+		return points;
+	}
+
+	public double getFans() {
+		return fans;
+	}
+
+	public double getAvatar() {
+		return avatar;
+	}
+
+	public double getAcl() {
+		return acl;
+	}
+
+	public double getCreated() {
+		return created;
+	}
+
+	public boolean isDj() {
+		return isDj;
+	}
+	
+	public boolean isRemote() {
+		return isRemote;
+	}
+
+	public Status getStatus() {
+		return status;
 	}
 
 	public Laptop getLaptop() {
 		return laptop;
 	}
 
-	public int getPoints() {
-		return (int) points;
+	public Room getRoom() {
+		return room;
 	}
 
-	public int getFans() {
-		return (int) fans;
+	public Message toDBObject() {
+		return null;
+	}
+	
+	public void setAvatar(int avatar) {
+		this.avatar = avatar;
 	}
 
-	public int getAvatar() {
-		return (int) avatar;
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setRank(Rank rank) {
+		this.rank = rank;
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
+	public void setDj(boolean isDj) {
+		this.isDj = isDj;
+	}
+
+	public void updateActivity() {
+		activity = Timestamp.now();
+	}
+
+	public Timestamp getActivity() {
+		return activity;
 	}
 
 	public void addPoint() {
@@ -133,40 +145,17 @@ public class User {
 		return rank;
 	}
 
-	public void addPoints(int i) {
-		points += i;
+	public void save() {
+		if (room != null)
+			room.saveUser(this);
 	}
 
-	public void setAvatar(int avatar) {
-		this.avatar = avatar;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setRank(Rank rank) {
-		this.rank = rank;
-	}
-
-	public String toString() {
-		return toDBObject().toString();
-	}
-
-	public Status getStatus() {
-		return status;
-	}
-
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-	
 	public void setAttachment(String key, Object value) {
 		attachments.put(key, value);
 	}
-	
+
 	public Object getAttachment(String key) {
-		if(attachments.containsKey(key)) {
+		if (attachments.containsKey(key)) {
 			return attachments.get(key);
 		}
 		return null;

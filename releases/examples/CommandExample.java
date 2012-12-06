@@ -1,4 +1,3 @@
-import org.l3eta.tt.Bot;
 import org.l3eta.tt.Enums.Vote;
 import org.l3eta.tt.User;
 import org.l3eta.tt.command.Command;
@@ -8,8 +7,11 @@ import org.l3eta.tt.manager.CommandManager;
 
 public class CommandExample extends EventListener {
 
-	public CommandExample(Bot bot) {
-		super(bot);
+	public CommandExample() {
+		
+	}
+	
+	public void loaded() {
 		CommandManager cm = bot.getCommandManager();
 		cm.addCommand(new Hello("hello"));
 		cm.addCommand(new Dance("dance"));

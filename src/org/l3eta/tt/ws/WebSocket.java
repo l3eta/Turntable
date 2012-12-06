@@ -2,7 +2,6 @@ package org.l3eta.tt.ws;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.concurrent.Executors;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
@@ -28,7 +27,7 @@ public abstract class WebSocket extends Thread {
 	}
 
 	public void run() {
-		cbs = new ClientBootstrap(new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool()));
+		cbs = new ClientBootstrap(new NioClientSocketChannelFactory());
 		wsh = new WebSocketHandler(WebSocket.this);
 		cbs.setPipelineFactory(new ChannelPipelineFactory() {
 			public ChannelPipeline getPipeline() throws Exception {
@@ -49,7 +48,6 @@ public abstract class WebSocket extends Thread {
 			future.awaitUninterruptibly().rethrowIfFailed();
 			channel = future.getChannel();
 			wsh.handshake(channel).awaitUninterruptibly().rethrowIfFailed();
-
 			channel.getCloseFuture().awaitUninterruptibly();
 		} catch (Exception ex) {
 			ex.printStackTrace();

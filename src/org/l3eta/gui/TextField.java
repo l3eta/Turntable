@@ -1,12 +1,13 @@
 package org.l3eta.gui;
 
+import static java.awt.event.KeyEvent.VK_BACK_SPACE;
+import static java.awt.event.KeyEvent.VK_DELETE;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-
-import static java.awt.event.KeyEvent.*;
 
 import javax.swing.JTextField;
 

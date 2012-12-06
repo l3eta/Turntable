@@ -3,18 +3,20 @@ package org.l3eta.tt.db;
 import java.io.File;
 
 import org.l3eta.tt.User;
-import org.l3eta.tt.user.Rank;
 import org.l3eta.tt.util.Message;
 import org.l3eta.util.FileUtil;
 
-public class DefaultDatabase extends Database {
-	private File dbRoot = new File(System.getProperty("user.home") + "/databases");
+public class DefaultDatabase implements Database {
+	private String database;
+	private File dbRoot = new File(System.getProperty("user.home") + "/turntable/databases");
 	private File dbUsers;
 	private File dbSettings;
 
-	public DefaultDatabase(String dbName) {
-		super(dbName);
-		dbRoot = new File(dbRoot, dbName);
+	public DefaultDatabase(String database) {
+		this.database = database;
+		if (!dbRoot.exists())
+			dbRoot.mkdirs();
+		dbRoot = new File(dbRoot, database);
 		if (!dbRoot.exists())
 			dbRoot.mkdir();
 		dbUsers = new File(dbRoot, "users");
@@ -25,43 +27,38 @@ public class DefaultDatabase extends Database {
 			dbSettings.mkdir();
 	}
 
-	@Override
-	public Rank getUserRank(User user) {
-		return Rank.USER;
-	}
-
-	@Override
 	public void saveUser(User user) {
 		FileUtil.writeTo(new File(dbUsers, user.getID() + ".sav"), user.toString());
 	}
 
-	@Override
 	public void saveUsers(User[] users) {
-		for (User user : users) {
+		for (User user : users)
 			saveUser(user);
-		}
 	}
 
-	@Override
-	public User getUser(String userid) {
+	public User loadUser(String userid) {
 		File file = new File(dbUsers, userid + ".sav");
-		if (file.exists()) {
+		if (file.exists())
 			return new User(new Message(FileUtil.read(file)));
-		}
 		return null;
 	}
 
-	@Override
-	public void putSettings(String col, Message map) {
-		FileUtil.writeTo(new File(dbSettings, col + ".map"), map.toString());
+	public void putSetting(String setting, Message map) {
+		FileUtil.writeTo(new File(dbSettings, setting + ".map"), map.toString());
 	}
 
-	@Override
-	public Message getSettings(String col) {
-		File file = new File(dbSettings, col + ".map");
-		if(file.exists()) {
+	public Message getSetting(String setting) {
+		File file = new File(dbSettings, setting + ".map");
+		if(file.exists())
 			return new Message(FileUtil.read(file));
-		}
 		return null;
+	}
+	
+	public boolean hasSetting(String setting) {
+		return new File(dbSettings, setting + ".map").exists();
+	}
+
+	public String getName() {
+		return database;
 	}
 }

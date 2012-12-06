@@ -42,8 +42,8 @@ import org.l3eta.tt.util.DirectoryGraph.DirectoryGraphCallback;
 import org.l3eta.tt.util.External;
 import org.l3eta.tt.util.External.ExternalAPICallback;
 import org.l3eta.tt.util.Message;
-import org.l3eta.tt.util.Timestamp;
 import org.l3eta.tt.ws.WebSocket;
+import org.l3eta.util.Timestamp;
 
 import com.mongodb.BasicDBList;
 
@@ -79,10 +79,10 @@ public class Bot {
 		playlist = new ArrayList<Song>();
 		fanOf = new ArrayList<String>();
 		requests = new ArrayList<BotMessage>();
-		eventManager = new EventManager();
+		eventManager = new EventManager(this);
 		commandManager = new CommandManager(this);
 		msgid = 0;
-		database = new DefaultDatabase("default");
+		database = new DefaultDatabase("Future");
 	}
 
 	public Bot(String auth, String userid, String roomid) {
@@ -102,6 +102,7 @@ public class Bot {
 		msgid = 0;
 		WebSocket ws = new WebSocket(this) {
 			public void onMessage(String msg) {
+				debug("> " + msg, RAW_DEBUG);
 				if (msg.equals("~m~10~m~no_session")) {
 					authUser();
 					return;
@@ -111,9 +112,8 @@ public class Bot {
 					lastHeartbeat = Timestamp.now();
 					return;
 				}
-				Message message = new Message(msg);
-				lastActivity = Timestamp.now();
-				debug("> " + message, RAW_DEBUG);
+				Message message = new Message(msg);				
+				lastActivity = Timestamp.now();				
 				for (BotMessage bm : getMessages()) {
 					if (message.containsField("msgid")) {
 						if (bm.getMsgID() == message.getInt("msgid")) {
@@ -217,7 +217,8 @@ public class Bot {
 				eventManager.sendEvent(new DjEvent(user, true));
 				break;
 			case NOSONG:
-				eventManager.sendEvent(new EndSongEvent(getCurrentSong()));
+				if(getCurrentSong() != null)
+					eventManager.sendEvent(new EndSongEvent(getCurrentSong()));
 				room.setCurrentSong(null);
 				eventManager.sendEvent(new NoSongEvent(msg));
 				break;
@@ -282,16 +283,16 @@ public class Bot {
 					ExternalAPICallback callback = new ExternalAPICallback() {
 						public final void run(Message message, boolean success) {
 							if (success) {
-								User user = new User(message);
+								User ru = new User(message);
 								if (isCommand(stemp)) {
 									String[] args = stemp.substring(1).split(" ");
 									if (commandManager.hasCommand(args[0])) {
 										Command c = commandManager.getCommand(args[0]);
-										if (c.canExecute(user))
-											c.execute(user, (String[]) trimArray(args, 1), ChatType.PM);
+										if (c.canExecute(ru))
+											c.execute(ru, (String[]) trimArray(args, 1), ChatType.PM);
 									}
 								}
-								eventManager.sendEvent(new ChatEvent(user, stemp, ChatType.PM));
+								eventManager.sendEvent(new ChatEvent(ru, stemp, ChatType.PM));
 							}
 						}
 					};
@@ -311,7 +312,6 @@ public class Bot {
 						}
 						eventManager.sendEvent(new ChatEvent(user, stemp, ChatType.PM));
 					}
-
 				}
 				break;
 			case ROOM_CHANGED:

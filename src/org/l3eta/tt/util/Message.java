@@ -1,13 +1,13 @@
 package org.l3eta.tt.util;
 
+import static com.mongodb.util.JSON.parse;
+
 import java.util.ArrayList;
 
 import org.bson.BasicBSONObject;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-
-import static com.mongodb.util.JSON.parse;
 
 public class Message extends BasicBSONObject {
 	private static final long serialVersionUID = -7803141080791022213L;
@@ -17,7 +17,7 @@ public class Message extends BasicBSONObject {
 	}
 
 	public Message(Object o) {
-		super(((BasicDBObject) o).toMap());
+		super(((BasicBSONObject) o).toMap());
 	}
 
 	public Message(String json) {
@@ -27,7 +27,7 @@ public class Message extends BasicBSONObject {
 	public Message(String json, int cutoff) {
 		this(json.substring(0, json.length() - cutoff));
 	}
-	
+
 	public BasicDBList getList(String name) {
 		return (BasicDBList) get(name);
 	}
@@ -59,7 +59,7 @@ public class Message extends BasicBSONObject {
 		}
 		return message.toArray(new Message[0]);
 	}
-	
+
 	public String[] getStringList(String name) {
 		return getList(name).toArray(new String[0]);
 	}
